@@ -56,7 +56,7 @@ main() {
   };
 
   test('ci', () async {
-    var string = await new File('example/ci.kdl').readAsString();
+    var string = await new File('./example/ci.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
       _("name", "CI");
@@ -107,7 +107,7 @@ main() {
   });
 
   test('cargo', () async {
-    var string = await new File('example/cargo.kdl').readAsString();
+    var string = await new File('./example/cargo.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
       _("package", () {
@@ -128,7 +128,7 @@ main() {
   });
 
   test('nuget', () async {
-    var string = await new File('example/nuget.kdl').readAsString();
+    var string = await new File('./example/nuget.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
 
     // This file is particularly large. It would be nice to validate it, but for now
