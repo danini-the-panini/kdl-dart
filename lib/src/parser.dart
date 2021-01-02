@@ -50,7 +50,12 @@ class KdlParser {
 
   _identifier() {
     _eatWhitespace();
-    return _expect(KdlToken.IDENT);
+    var t = tokenizer.peekToken();
+    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING) {
+      tokenizer.nextToken();
+      return t[1];
+    }
+    throw "Expected identifier, got ${t[0]}";
   }
 
   _eatWhitespace() {
@@ -96,6 +101,21 @@ class KdlParser {
       case KdlToken.SEMICOLON:
         tokenizer.nextToken();
         return;
+      case KdlToken.STRING:
+        var t = tokenizer.peekTokenAfterNext();
+        if (t[0] == KdlToken.EQUALS) {
+          var p = _prop();
+          if (!commented) {
+            node.properties[p[0]] = p[1];
+          }
+        } else {
+          var v = _value();
+          if (!commented) {
+            node.arguments.add(v);
+          }
+        }
+        commented = false;
+        break;
       default:
         var v = _value();
         if (!commented) {
@@ -108,7 +128,7 @@ class KdlParser {
   }
 
   _prop() {
-    var name = _expect(KdlToken.IDENT);
+    var name = _identifier();
     _expect(KdlToken.EQUALS);
     var value = _value();
     return [name, value];

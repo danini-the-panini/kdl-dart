@@ -4,9 +4,20 @@ import 'package:test/test.dart';
 import '../lib/src/tokenizer.dart';
 
 void main() {
+  test('peek and peek after next', () {
+    var tokenizer = KdlTokenizer("node 1 2 3");
+
+    expect(tokenizer.peekToken(), equals([KdlToken.IDENT, "node"]));
+    expect(tokenizer.peekTokenAfterNext(), equals([KdlToken.WS, " "]));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, "node"]));
+    expect(tokenizer.peekToken(), equals([KdlToken.WS, " "]));
+    expect(tokenizer.peekTokenAfterNext(), equals([KdlToken.INTEGER, 1]));
+  });
+  
   test('identifier', () {
     expect(KdlTokenizer("foo").nextToken(), equals([KdlToken.IDENT, "foo"]));
     expect(KdlTokenizer("foo-bar123").nextToken(), equals([KdlToken.IDENT, "foo-bar123"]));
+    expect(KdlTokenizer(r"foo123~!@#$%^&*.:'|/?+").nextToken(), equals([KdlToken.IDENT, r"foo123~!@#$%^&*.:'|/?+"]));
   });
 
   test('string', () {

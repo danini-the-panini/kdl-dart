@@ -1,4 +1,3 @@
-import 'package:kdl/src/tokenizer.dart';
 import 'package:test/test.dart';
 
 import 'package:kdl/src/document.dart';
@@ -205,194 +204,47 @@ void main() {
     expect(parser.parse("node1\n\nnode2"), equals(KdlDocument([KdlNode('node1'), KdlNode('node2')])));
   });
 
-  // test('basic', () {
-  //   doc = parser.parse('title "Hello, World"')
-  //   nodes = nodes! {
-  //     title "Hello, World"
-  //   }
-  //   expect(nodes, doc
-  // });
+  test('comments', () {
+    var doc = parser.parse("""
+      // C style
 
-  // test('multiple_values', () {
-  //   doc = parser.parse('bookmarks 12 15 188 1234')
-  //   nodes = nodes! {
-  //     bookmarks 12, 15, 188, 1234
-  //   }
-  //   expect(nodes, doc
-  // });
+      /*
+      C style multiline
+      */
 
-  // test('properties', () {
-  //   doc = parser.parse <<~KDL
-  //     author "Alex Monad" email="alex@example.com" active=true
-  //     foo bar=true "baz" quux=false 1 2 3
-  //   KDL
-  //   nodes = nodes! {
-  //     author "Alex Monad", email: "alex@example.com", active: true
-  //     foo "baz", 1, 2, 3, bar: true, quux: false
-  //   }
-  //   expect(nodes, doc
-  // });
+      tag /*foo=true*/ bar=false
 
-  // test('nested_child_nodes', () {
-  //   doc = parser.parse <<~KDL
-  //     contents {
-  //       section "First section" {
-  //         paragraph "This is the first paragraph"
-  //         paragraph "This is the second paragraph"
-  //       }
-  //     }
-  //   KDL
-  //   nodes = nodes! {
-  //     contents {
-  //       section("First section") {
-  //         paragraph "This is the first paragraph"
-  //         paragraph "This is the second paragraph"
-  //       }
-  //     }
-  //   }
-  //   expect(nodes, doc
-  // });
+      /*/*
+      hello
+      */*/
+    """.trim());
+    var nodes = KdlDocument([
+      KdlNode('tag', properties: { 'bar': KdlBool(false) })
+    ]);
+    expect(doc, equals(nodes));
+  });
 
-  // test('semicolon', () {
-  //   doc = parser.parse('node1; node2; node3;')
-  //   nodes = nodes! {
-  //     node1; node2; node3;
-  //   }
-  //   expect(nodes, doc
-  // });
+  test('utf8', () {
+    var doc = parser.parse("""
+      smile "😁"
+      ノード お名前＝"☜(ﾟヮﾟ☜)"
+    """.trim());
+    var nodes = KdlDocument([
+      KdlNode('smile', arguments: [KdlString('😁')]),
+      KdlNode('ノード', properties: { 'お名前': KdlString('☜(ﾟヮﾟ☜)') })
+    ]);
+    expect(doc, equals(nodes));
+  });
 
-  // test('raw_strings', () {
-  //   doc = parser.parse <<~KDL
-  //     node "this\\nhas\\tescapes"
-  //     other r"C:\\Users\\zkat\\"
-  //     other-raw r#"hello"world"#
-  //   KDL
-  //   nodes = nodes! {
-  //     node "this\nhas\tescapes"
-  //     other "C:\\Users\\zkat\\"
-  //     _ 'other-raw', "hello\"world"
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('multiline_strings', () {
-  //   doc = parser.parse <<~KDL
-  //     string "my
-  //     multiline
-  //     value"
-  //   KDL
-  //   nodes = nodes! {
-  //     string "my\nmultiline\nvalue"
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('numbers', () {
-  //   doc = parser.parse <<~KDL
-  //     num 1.234e-42
-  //     my-hex 0xdeadbeef
-  //     my-octal 0o755
-  //     my-binary 0b10101101
-  //     bignum 1_000_000
-  //   KDL
-  //   nodes = nodes! {
-  //     num 1.234e-42
-  //     _ 'my-hex', 0xdeadbeef
-  //     _ 'my-octal', 0o755
-  //     _ 'my-binary', 0b10101101
-  //     bignum 1_000_000
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('comments', () {
-  //   doc = parser.parse <<~KDL
-  //     // C style
-
-  //     /*
-  //     C style multiline
-  //     */
-
-  //     tag /*foo=true*/ bar=false
-
-  //     /*/*
-  //     hello
-  //     */*/
-  //   KDL
-  //   nodes = nodes! {
-  //     tag bar: false
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('slash_dash', () {
-  //   doc = parser.parse <<~KDL
-  //     /-mynode "foo" key=1 {
-  //       a
-  //       b
-  //       c
-  //     }
-
-  //     mynode /-"commented" "not commented" /-key="value" /-{
-  //       a
-  //       b
-  //     }
-  //   KDL
-
-  //   nodes = nodes! {
-  //     mynode "not commented"
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('multiline_nodes', () {
-  //   doc = parser.parse <<~KDL
-  //     title \\
-  //       "Some title"
-
-  //     my-node 1 2 \\  // comments are ok after \\
-  //             3 4
-  //   KDL
-  //   nodes = nodes! {
-  //     title "Some title"
-  //     _ "my-node", 1, 2, 3, 4
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('utf8', () {
-  //   doc = parser.parse <<~KDL
-  //     smile "😁"
-  //     ノード お名前＝"☜(ﾟヮﾟ☜)"
-  //   KDL
-  //   nodes = KdlDocument([
-  //     KdlNode('smile', [KdlString('😁')]),
-  //     KdlNode('ノード', [], { 'お名前' => KdlString('☜(ﾟヮﾟ☜)') })
-  //   ])
-  //   expect(nodes, doc
-  // });
-
-  // test('node_names', () {
-  //   doc = parser.parse <<~KDL
-  //     "!@#$@$%Q#$%~@!40" "1.2.3" "!!!!!"=true
-  //     foo123~!@#$%^&*.:'|/?+ "weeee"
-  //   KDL
-  //   nodes = nodes! {
-  //     _ "!@#$@$%Q#$%~@!40", "1.2.3", "!!!!!": true
-  //     _ "foo123~!@#$%^&*.:'|/?+", "weeee"
-  //   }
-  //   expect(nodes, doc
-  // });
-
-  // test('escaping', () {
-  //   doc = parser.parse <<~KDL
-  //     node1 "\\u{1f600}"
-  //     node2 "\\n\\t\\r\\\\\\"\\f\\b"
-  //   KDL
-  //   nodes = nodes! {
-  //     node1 "😀"
-  //     node2 "\n\t\r\\\"\f\b"
-  //   }
-  //   expect(nodes, doc
-  // });
+  test('node_names', () {
+    var doc = parser.parse(r"""
+      "!@#$@$%Q#$%~@!40" "1.2.3" "!!!!!"=true
+      foo123~!@#$%^&*.:'|/?+ "weeee"
+    """.trim());
+    var nodes = KdlDocument([
+      KdlNode(r"!@#$@$%Q#$%~@!40", arguments: [KdlString("1.2.3")], properties: { "!!!!!": KdlBool(true) }),
+      KdlNode(r"foo123~!@#$%^&*.:'|/?+", arguments: [KdlString("weeee")])
+    ]);
+    expect(doc, equals(nodes));
+  });
 }

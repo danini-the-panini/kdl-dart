@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:ffi';
 
 enum KdlTokenizerContext {
@@ -72,7 +73,7 @@ class KdlTokenizer {
   bool done = false;
   KdlTokenizerContext previousContext = null;
   int commentNesting = 0;
-  List peekedToken = null;
+  Queue peekedTokens = Queue();
   
   KdlTokenizer(String str, { int start: 0 }) {
     this.str = str;
@@ -85,17 +86,25 @@ class KdlTokenizer {
   }
 
   peekToken() {
-    if (this.peekedToken == null) {
-      this.peekedToken = _readNextToken();
+    if (this.peekedTokens.isEmpty) {
+      this.peekedTokens.add(_readNextToken());
     }
-    return this.peekedToken;
+    return this.peekedTokens.first;
+  }
+
+  peekTokenAfterNext() {
+    if (this.peekedTokens.isEmpty) {
+      this.peekedTokens.add(_readNextToken());
+      this.peekedTokens.add(_readNextToken());
+    } else if (this.peekedTokens.length == 1) {
+      this.peekedTokens.add(_readNextToken());
+    }
+    return this.peekedTokens.elementAt(1);
   }
 
   nextToken() {
-    if (this.peekedToken != null) {
-      var t = this.peekedToken;
-      this.peekedToken = null;
-      return t;
+    if (this.peekedTokens.isNotEmpty) {
+      return this.peekedTokens.removeFirst();
     } else {
       return this._readNextToken();
     }
