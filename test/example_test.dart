@@ -56,7 +56,6 @@ main() {
   };
 
   test('ci', () async {
-    print(Directory.current);
     var string = await new File('./example/ci.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
@@ -108,7 +107,7 @@ main() {
   });
 
   test('cargo', () async {
-    var string = await new File('./example/cargo.kdl').readAsString();
+    var string = await new File('./example/Cargo.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
       _("package", () {
