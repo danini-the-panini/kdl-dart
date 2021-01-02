@@ -2,6 +2,16 @@
 
 This is a Dart implementation of the [KDL Document Language](https://kdl.dev)
 
+## Usage
+
+```dart
+import 'package:kdl/kdl.dart';
+
+main() {
+  var document = Kdl.parseDocument(someString);
+}
+```
+
 ## Run the tests
 
 To run the full test suite:
