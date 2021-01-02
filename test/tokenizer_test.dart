@@ -11,7 +11,8 @@ void main() {
 
   test('string', () {
     expect(KdlTokenizer('"foo"').nextToken(), equals([KdlToken.STRING, "foo"]));
-    expect(KdlTokenizer('"foo\nbar"').nextToken(), equals([KdlToken.STRING, "foo\nbar"]));
+    expect(KdlTokenizer(r'"foo\nbar"').nextToken(), equals([KdlToken.STRING, "foo\nbar"]));
+    expect(KdlTokenizer(r'"\u{10FFF}"').nextToken(), equals([KdlToken.STRING, "\u{10FFF}"]));
   });
 
   test('rawstring', () {

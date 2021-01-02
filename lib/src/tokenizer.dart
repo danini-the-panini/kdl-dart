@@ -57,7 +57,7 @@ class KdlTokenizer {
     ...WHITESPACE,
     ...NEWLINES,
     ...SYMBOLS.keys,
-    "\\", "<", ">", "[", "]", '"', ",",
+    "\r", "\\", "<", ">", "[", "]", '"', ",",
     List.generate(0x20, (index) => String.fromCharCode(index))];
   static var NON_INITIAL_IDENTIFIER_CHARS = [
     ...NON_IDENTIFIER_CHARS,
@@ -72,63 +72,81 @@ class KdlTokenizer {
   bool done = false;
   KdlTokenizerContext previousContext = null;
   int commentNesting = 0;
+  List peekedToken = null;
   
   KdlTokenizer(String str, { int start: 0 }) {
     this.str = str;
     this.index = start;
   }
 
-  setContext(KdlTokenizerContext ctx) {
+  _setContext(KdlTokenizerContext ctx) {
     this.previousContext = this.context;
     this.context = ctx;
   }
 
+  peekToken() {
+    if (this.peekedToken == null) {
+      this.peekedToken = _readNextToken();
+    }
+    return this.peekedToken;
+  }
+
   nextToken() {
+    if (this.peekedToken != null) {
+      var t = this.peekedToken;
+      this.peekedToken = null;
+      return t;
+    } else {
+      return this._readNextToken();
+    }
+  }
+
+  _readNextToken() {
     this.context = null;
     this.previousContext = null;
     while (true) {
-      var c = charAt(this.index);
+      var c = _charAt(this.index);
       if (this.context == null) {
         if (c == '"') {
-          setContext(KdlTokenizerContext.string);
+          _setContext(KdlTokenizerContext.string);
           this.buffer = '';
           this.index += 1;
         } else if (c == 'r') {
-          if (charAt(this.index + 1) == '"') {
-            setContext(KdlTokenizerContext.rawstring);
+          if (_charAt(this.index + 1) == '"') {
+            _setContext(KdlTokenizerContext.rawstring);
             this.index += 2;
             this.rawstringHashes = 0;
             this.buffer = '';
             continue;
-          } else if (charAt(this.index + 1) == '#') {
+          } else if (_charAt(this.index + 1) == '#') {
             var i = this.index + 1;
             this.rawstringHashes = 0;
-            while (charAt(i) == '#') {
+            while (_charAt(i) == '#') {
               this.rawstringHashes += 1;
               i += 1;
             }
-            if (charAt(i) == '"') {
-              setContext(KdlTokenizerContext.rawstring);
+            if (_charAt(i) == '"') {
+              _setContext(KdlTokenizerContext.rawstring);
               this.index = i + 1;
               this.buffer = '';
               continue;
             }
           }
-          setContext(KdlTokenizerContext.ident);
+          _setContext(KdlTokenizerContext.ident);
           this.buffer = c;
           this.index += 1;
         } else if (c != null && RegExp(r"[0-9\-+]").hasMatch(c)) {
-          var n = charAt(this.index + 1);
-          if (c == '0' && RegExp("[box]").hasMatch(n)) {
+          var n = _charAt(this.index + 1);
+          if (c == '0' && n != null && RegExp("[box]").hasMatch(n)) {
             this.index += 2;
             this.buffer = '';
             switch (n) {
-              case 'b': setContext(KdlTokenizerContext.binary); break;
-              case 'o': setContext(KdlTokenizerContext.octal); break;
-              case 'x': setContext(KdlTokenizerContext.hexadecimal); break;
+              case 'b': _setContext(KdlTokenizerContext.binary); break;
+              case 'o': _setContext(KdlTokenizerContext.octal); break;
+              case 'x': _setContext(KdlTokenizerContext.hexadecimal); break;
             }
           } else {
-            setContext(KdlTokenizerContext.decimal);
+            _setContext(KdlTokenizerContext.decimal);
             this.index += 1;
             this.buffer = c;
           }
@@ -146,7 +164,7 @@ class KdlTokenizer {
           this.index += 1;
           return [SYMBOLS[c], c];
         } else if (c == "\r") {
-          var n = charAt(this.index + 1);
+          var n = _charAt(this.index + 1);
           if (n == "\n") {
             this.index += 2;
             return [KdlToken.NEWLINE, "${c}${n}"];
@@ -158,24 +176,24 @@ class KdlTokenizer {
           this.index += 1;
           return [KdlToken.NEWLINE, c];
         } else if (c == "/") {
-          var n = charAt(this.index + 1);
+          var n = _charAt(this.index + 1);
           if (n == '/') {
-            setContext(KdlTokenizerContext.singleLineComment);
+            _setContext(KdlTokenizerContext.singleLineComment);
             this.index += 2;
           } else if (n == '*') {
-            setContext(KdlTokenizerContext.multiLineComment);
+            _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;
             this.index += 2;
           } else if (n == '-') {
             this.index += 2;
             return [KdlToken.SLASHDASH, '/-'];
           } else {
-            setContext(KdlTokenizerContext.ident);
+            _setContext(KdlTokenizerContext.ident);
             this.buffer = c;
             this.index += 1;
           }
         } else if (WHITESPACE.contains(c)) {
-          setContext(KdlTokenizerContext.whitespace);
+          _setContext(KdlTokenizerContext.whitespace);
           this.buffer = c;
           this.index += 1;
         } else if (c == null) {
@@ -185,7 +203,7 @@ class KdlTokenizer {
           this.done = true;
           return [KdlToken.EOF, ''];
         } else if (!NON_INITIAL_IDENTIFIER_CHARS.contains(c)) {
-          setContext(KdlTokenizerContext.ident);
+          _setContext(KdlTokenizerContext.ident);
           this.buffer = c;
           this.index += 1;
         } else {
@@ -211,12 +229,12 @@ class KdlTokenizer {
           switch (c) {
           case '\\':
             this.buffer += c;
-            this.buffer += charAt(this.index + 1);
+            this.buffer += _charAt(this.index + 1);
             this.index += 2;
             break;
           case '"':
             this.index += 1;
-            return [KdlToken.STRING, convertEscapes(this.buffer)];
+            return [KdlToken.STRING, _convertEscapes(this.buffer)];
           case '':
             throw "Unterminated string literal";
           default:
@@ -232,7 +250,7 @@ class KdlTokenizer {
 
           if (c == '"') {
             var h = 0;
-            while (charAt(this.index + 1 + h) == '#' && h < this.rawstringHashes) {
+            while (_charAt(this.index + 1 + h) == '#' && h < this.rawstringHashes) {
               h += 1;
             }
             if (h == this.rawstringHashes) {
@@ -249,7 +267,7 @@ class KdlTokenizer {
               this.index += 1;
               this.buffer += c;
           } else {
-            return parseDecimal(this.buffer);
+            return _parseDecimal(this.buffer);
           }
           break;
         case KdlTokenizerContext.hexadecimal:
@@ -257,7 +275,7 @@ class KdlTokenizer {
             this.index += 1;
             this.buffer += c;
           } else {
-            return parseHexadecimal(this.buffer);
+            return _parseHexadecimal(this.buffer);
           }
           break;
         case KdlTokenizerContext.octal:
@@ -265,7 +283,7 @@ class KdlTokenizer {
             this.index += 1;
             this.buffer += c;
           } else {
-            return parseOctal(this.buffer);
+            return _parseOctal(this.buffer);
           }
           break;
         case KdlTokenizerContext.binary:
@@ -273,12 +291,12 @@ class KdlTokenizer {
             this.index += 1;
             this.buffer += c;
           } else {
-            return parseBinary(this.buffer);
+            return _parseBinary(this.buffer);
           }
           break;
         case KdlTokenizerContext.singleLineComment:
           if (NEWLINES.contains(c) || c == "\r") {
-            setContext(null);
+            _setContext(null);
             continue;
           } else if (c == null) {
             this.done = true;
@@ -288,7 +306,7 @@ class KdlTokenizer {
           }
           break;
         case KdlTokenizerContext.multiLineComment:
-          var n = charAt(this.index + 1);
+          var n = _charAt(this.index + 1);
           if (c == '/' && n == '*') {
             this.commentNesting += 1;
             this.index += 2;
@@ -296,7 +314,7 @@ class KdlTokenizer {
             this.commentNesting -= 1;
             this.index += 2;
             if (this.commentNesting == 0) {
-              revertContext();
+              _revertContext();
             }
           } else {
             this.index += 1;
@@ -317,8 +335,8 @@ class KdlTokenizer {
             } else {
               throw "Unexpected '\\'";
             }
-          } else if (c == "/" && charAt(this.index + 1) == '*') {
-            setContext(KdlTokenizerContext.multiLineComment);
+          } else if (c == "/" && _charAt(this.index + 1) == '*') {
+            _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;
             this.index += 2;
           } else {
@@ -329,42 +347,59 @@ class KdlTokenizer {
     }
   }
 
-  charAt(int i) {
+  _charAt(int i) {
     if (i < 0 || i >= this.str.length) {
       return null;
     }
     return this.str[i];
   }
 
-  revertContext() {
+  _revertContext() {
     this.context = this.previousContext;
     this.previousContext = null;
   }
 
-  parseDecimal(String s) {
+  _parseDecimal(String s) {
     if (RegExp("[.eE]").hasMatch(s)) {
-      return [KdlToken.FLOAT, double.parse(munchUnderscores(s))];
+      _checkFloat(s);
+      return [KdlToken.FLOAT, double.parse(_munchUnderscores(s))];
     }
-    return [KdlToken.INTEGER, int.parse(munchUnderscores(s), radix: 10)];
-  }
-  
-  parseHexadecimal(String s) {
-    return [KdlToken.INTEGER, int.parse(munchUnderscores(s), radix: 16)];
-  }
-  
-  parseOctal(String s) {
-    [KdlToken.INTEGER, int.parse(munchUnderscores(s), radix: 8)];
-  }
-  
-  parseBinary(String s) {
-    [KdlToken.INTEGER, int.parse(munchUnderscores(s), radix: 2)];
+    _checkInt(s);
+    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 10)];
   }
 
-  munchUnderscores(String s) {
+  _checkFloat(String s) {
+    if (!RegExp(r"^[+-]?[0-9][0-9_]*(\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?)?$").hasMatch(s)) {
+      throw "Invalid float: ${s}";
+    }
+  }
+  
+  _checkInt(String s) {
+    if (!RegExp(r"^[+-]?[0-9][0-9_]*$").hasMatch(s)) {
+      throw "Invalid integer: ${s}";
+    }
+  }
+  
+  _parseHexadecimal(String s) {
+    if (!RegExp(r"^[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s)) throw "Invalid hexadecimal: ${s}";
+    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 16)];
+  }
+  
+  _parseOctal(String s) {
+    if (!RegExp(r"^[0-7][0-7_]*$").hasMatch(s)) throw "Invalid octal: ${s}";
+    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 8)];
+  }
+  
+  _parseBinary(String s) {
+    if (!RegExp(r"^[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
+    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 2)];
+  }
+
+  _munchUnderscores(String s) {
     return s.replaceAll('_', '');
   }
 
-  convertEscapes(String string) {
+  _convertEscapes(String string) {
     return string.replaceAllMapped(RegExp(r"\\[^u]"), (match) {
       switch (match.group(0)) {
         case r'\n': return "\n";
@@ -374,11 +409,12 @@ class KdlTokenizer {
         case r'\"': return "\"";
         case r'\b': return "\b";
         case r'\f': return "\f";
-        default: throw "Unexpectec escape '${match.group(0)}'";
+        case r'\/': return "/";
+        default: throw "Unexpected escape '${match.group(0)}'";
       }
-    }).replaceAllMapped(RegExp("r\\u\{[0-9a-fA-F]{0,6}\}"), (match) {
+    }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{0,6}\}"), (match) {
       var m = match.group(0);
-      var i = int.parse(m.substring(3, m.length - 2), radix: 16);
+      var i = int.parse(m.substring(3, m.length - 1), radix: 16);
       if (i < 0 || i > 0x10FFFF) {
         throw "Invalid code point ${m}";
       }
