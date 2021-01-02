@@ -91,6 +91,14 @@ class KdlNode {
 }
 
 abstract class KdlValue {
+  static KdlValue from(v) {
+    if (v is String) return KdlString(v);
+    if (v is int) return KdlInt(v);
+    if (v is double) return KdlFloat(v);
+    if (v is bool) return KdlBool(v);
+    if (v == null) return KdlNull();
+    throw "No KDL value for ${v}";
+  }
 }
 
 class KdlString extends KdlValue {

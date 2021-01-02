@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:ffi';
 
 enum KdlTokenizerContext {
   ident,
@@ -336,10 +335,9 @@ class KdlTokenizer {
           } else if (c == "\\") {
             var t = KdlTokenizer(this.str, start: this.index + 1);
             var la = t.nextToken()[0];
-            KdlToken lan;
             if (la == KdlToken.NEWLINE) {
               this.index = t.index;
-            } else if (la == KdlToken.WS && (lan = t.nextToken()[0]) == KdlToken.NEWLINE) {
+            } else if (la == KdlToken.WS && t.nextToken()[0] == KdlToken.NEWLINE) {
               this.index = t.index;
             } else {
               throw "Unexpected '\\'";
