@@ -56,6 +56,7 @@ main() {
   };
 
   test('ci', () async {
+    print(Directory.current);
     var string = await new File('./example/ci.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
