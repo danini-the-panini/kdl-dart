@@ -1,5 +1,7 @@
 # KDL
 
+[![Actions Status](https://github.com/jellymann/kdl-dart/workflows/Dart/badge.svg)](https://github.com/jellymann/kdl-dart/actions)
+
 This is a Dart implementation of the [KDL Document Language](https://kdl.dev)
 
 ## Usage
@@ -17,13 +19,13 @@ main() {
 To run the full test suite:
 
 ```
-pub run test test
+dart test
 ```
 
 To run a single test file:
 
 ```
-pub run test test/parser_test.dart
+dart test test/parser_test.dart
 ```
 
 ## Contributing
