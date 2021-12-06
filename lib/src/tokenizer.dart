@@ -232,7 +232,6 @@ class KdlTokenizer {
             default: return [KdlToken.IDENT, this.buffer];
             }
           }
-          break;
         case KdlTokenizerContext.string:
           switch (c) {
           case '\\':
@@ -349,6 +348,9 @@ class KdlTokenizer {
           } else {
             return [KdlToken.WS, this.buffer];
           }
+          break;
+        case null:
+          throw "Unexpected null context";
         }
       }
     }
