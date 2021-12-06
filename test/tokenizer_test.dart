@@ -13,7 +13,7 @@ void main() {
     expect(tokenizer.peekToken(), equals([KdlToken.WS, " "]));
     expect(tokenizer.peekTokenAfterNext(), equals([KdlToken.INTEGER, 1]));
   });
-  
+
   test('identifier', () {
     expect(KdlTokenizer("foo").nextToken(), equals([KdlToken.IDENT, "foo"]));
     expect(KdlTokenizer("foo-bar123").nextToken(), equals([KdlToken.IDENT, "foo-bar123"]));

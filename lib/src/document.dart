@@ -34,9 +34,9 @@ class KdlNode {
   Map<String, KdlValue> properties = {};
 
   KdlNode(String name, {
-    List<KdlNode> children = null,
-    List<KdlValue> arguments = null,
-    Map<String, KdlValue> properties = null
+    List<KdlNode>? children = null,
+    List<KdlValue>? arguments = null,
+    Map<String, KdlValue>? properties = null
   }) {
     this.name = name;
     this.children = children ?? [];

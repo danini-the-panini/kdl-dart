@@ -64,13 +64,13 @@ class KdlTokenizer {
     List.generate(10, (index) => index.toString())
   ];
 
-  String str;
-  KdlTokenizerContext context = null;
-  int rawstringHashes = null;
+  String str = '';
+  KdlTokenizerContext? context = null;
+  int rawstringHashes = -1;
   int index = 0;
   String buffer = "";
   bool done = false;
-  KdlTokenizerContext previousContext = null;
+  KdlTokenizerContext? previousContext = null;
   int commentNesting = 0;
   Queue peekedTokens = Queue();
   
@@ -79,7 +79,7 @@ class KdlTokenizer {
     this.index = start;
   }
 
-  _setContext(KdlTokenizerContext ctx) {
+  _setContext(KdlTokenizerContext? ctx) {
     this.previousContext = this.context;
     this.context = ctx;
   }
@@ -420,8 +420,8 @@ class KdlTokenizer {
         default: throw "Unexpected escape '${match.group(0)}'";
       }
     }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{0,6}\}"), (match) {
-      var m = match.group(0);
-      var i = int.parse(m.substring(3, m.length - 1), radix: 16);
+      String m = match.group(0) ?? '';
+      int i = int.parse(m.substring(3, m.length - 1), radix: 16);
       if (i < 0 || i > 0x10FFFF) {
         throw "Invalid code point ${m}";
       }

@@ -4,7 +4,7 @@ import 'package:kdl/src/document.dart';
 import 'package:kdl/src/parser.dart';
 
 void main() {
-  KdlParser parser;
+  late KdlParser parser;
 
   setUp(() {
     parser = KdlParser();

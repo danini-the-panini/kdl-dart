@@ -2,7 +2,7 @@ import 'package:kdl/src/document.dart';
 import 'package:kdl/src/tokenizer.dart';
 
 class KdlParser {
-  KdlTokenizer tokenizer;
+  late KdlTokenizer tokenizer;
 
   parse(String string) {
     this.tokenizer = KdlTokenizer(string);
