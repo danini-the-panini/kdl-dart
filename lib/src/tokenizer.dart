@@ -24,6 +24,8 @@ enum KdlToken {
   NULL,
   WS,
   NEWLINE,
+  LBRACE,
+  RBRACE,
   LPAREN,
   RPAREN,
   EQUALS,
@@ -35,8 +37,10 @@ enum KdlToken {
 
 class KdlTokenizer {
   static const SYMBOLS = {
-    '{': KdlToken.LPAREN,
-    '}': KdlToken.RPAREN,
+    '(': KdlToken.LPAREN,
+    ')': KdlToken.RPAREN,
+    '{': KdlToken.LBRACE,
+    '}': KdlToken.RBRACE,
     '=': KdlToken.EQUALS,
     '＝': KdlToken.EQUALS,
     ';': KdlToken.SEMICOLON
@@ -57,7 +61,7 @@ class KdlTokenizer {
     ...WHITESPACE,
     ...NEWLINES,
     ...SYMBOLS.keys,
-    "\r", "\\", "<", ">", "[", "]", '"', ",",
+    "\r", "\\", "<", ">", "[", "]", '"', ",", "/",
     List.generate(0x20, (index) => String.fromCharCode(index))];
   static var NON_INITIAL_IDENTIFIER_CHARS = [
     ...NON_IDENTIFIER_CHARS,
@@ -73,7 +77,7 @@ class KdlTokenizer {
   KdlTokenizerContext? previousContext = null;
   int commentNesting = 0;
   Queue peekedTokens = Queue();
-  
+
   KdlTokenizer(String str, { int start: 0 }) {
     this.str = str;
     this.index = start;

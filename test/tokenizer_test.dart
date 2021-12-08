@@ -61,8 +61,8 @@ void main() {
   });
 
   test('symbols', () {
-    expect(KdlTokenizer("{").nextToken(), equals([KdlToken.LPAREN, '{']));
-    expect(KdlTokenizer("}").nextToken(), equals([KdlToken.RPAREN, '}']));
+    expect(KdlTokenizer("{").nextToken(), equals([KdlToken.LBRACE, '{']));
+    expect(KdlTokenizer("}").nextToken(), equals([KdlToken.RBRACE, '}']));
     expect(KdlTokenizer("=").nextToken(), equals([KdlToken.EQUALS, '=']));
   });
 
@@ -172,12 +172,12 @@ smile "😁"
     expect(tokenizer.nextToken(), equals([KdlToken.INTEGER, 1]));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, ' ']));
     expect(tokenizer.nextToken(), equals([KdlToken.SLASHDASH, '/-']));
-    expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '{']));
+    expect(tokenizer.nextToken(), equals([KdlToken.LBRACE, '{']));
     expect(tokenizer.nextToken(), equals([KdlToken.NEWLINE, "\n"]));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, '  ']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'a']));
     expect(tokenizer.nextToken(), equals([KdlToken.NEWLINE, "\n"]));
-    expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, '}']));
+    expect(tokenizer.nextToken(), equals([KdlToken.RBRACE, '}']));
     expect(tokenizer.nextToken(), equals([KdlToken.EOF, '']));
     expect(tokenizer.nextToken(), equals([false, false]));
   });

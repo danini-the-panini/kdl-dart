@@ -85,7 +85,7 @@ class KdlParser {
         }
         commented = false;
         break;
-      case KdlToken.LPAREN:
+      case KdlToken.LBRACE:
         var children = _children();
         if (!commented) {
           node.children = children;
@@ -135,10 +135,10 @@ class KdlParser {
   }
 
   _children() {
-    _expect(KdlToken.LPAREN);
+    _expect(KdlToken.LBRACE);
     var nodes = _nodes();
     _eatLinespaces();
-    _expect(KdlToken.RPAREN);
+    _expect(KdlToken.RBRACE);
     return nodes;
   }
 
