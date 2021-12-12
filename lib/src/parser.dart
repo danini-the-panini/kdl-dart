@@ -35,10 +35,12 @@ class KdlParser {
       commented = true;
     }
 
-    var node;
+    var node, type;
     try {
-      node = KdlNode(_identifier());
-    } catch (_) {
+      type = _type();
+      node = KdlNode(_identifier(), type: type);
+    } catch (error) {
+      if (type != null) throw error;
       return false;
     }
 
@@ -51,7 +53,7 @@ class KdlParser {
   _identifier() {
     _eatWhitespace();
     var t = tokenizer.peekToken();
-    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING) {
+    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING || t[0] == KdlToken.RAWSTRING) {
       tokenizer.nextToken();
       return t[1];
     }
@@ -143,23 +145,32 @@ class KdlParser {
   }
 
   _value() {
+    var type = _type();
     var t = tokenizer.nextToken();
     switch (t[0]) {
       case KdlToken.STRING:
       case KdlToken.RAWSTRING:
-        return KdlString(t[1]);
+        return KdlString(t[1], type);
       case KdlToken.INTEGER:
-        return KdlInt(t[1]);
+        return KdlInt(t[1], type);
       case KdlToken.FLOAT:
-        return KdlFloat(t[1]);
+        return KdlFloat(t[1], type);
       case KdlToken.TRUE:
       case KdlToken.FALSE:
-        return KdlBool(t[1]);
+        return KdlBool(t[1], type);
       case KdlToken.NULL:
-        return KdlNull();
+        return KdlNull(type);
       default:
         throw "Expected value, got ${t[0]}";
     }
+  }
+
+  _type() {
+    if (tokenizer.peekToken()[0] != KdlToken.LPAREN) return null;
+    _expect(KdlToken.LPAREN);
+    var type = _identifier();
+    _expect(KdlToken.RPAREN);
+    return type;
   }
 
   _expect(KdlToken type) {
