@@ -277,32 +277,40 @@ class KdlTokenizer {
           if (c != null && RegExp(r"[0-9.\-+_eE]").hasMatch(c)) {
               this.index += 1;
               this.buffer += c;
-          } else {
+          } else if (WHITESPACE.contains(c) || NEWLINES.contains(c) || c == null) {
             return _parseDecimal(this.buffer);
+          } else {
+            throw "Unexpected '$c'";
           }
           break;
         case KdlTokenizerContext.hexadecimal:
           if (c != null && RegExp(r"[0-9a-fA-F_]").hasMatch(c)) {
             this.index += 1;
             this.buffer += c;
-          } else {
+          } else if (WHITESPACE.contains(c) || NEWLINES.contains(c) || c == null) {
             return _parseHexadecimal(this.buffer);
+          } else {
+            throw "Unexpected '$c'";
           }
           break;
         case KdlTokenizerContext.octal:
           if (c != null && RegExp(r"[0-7_]").hasMatch(c)) {
             this.index += 1;
             this.buffer += c;
-          } else {
+          } else if (WHITESPACE.contains(c) || NEWLINES.contains(c) || c == null) {
             return _parseOctal(this.buffer);
+          } else {
+            throw "Unexpected '$c'";
           }
           break;
         case KdlTokenizerContext.binary:
           if (c != null && RegExp(r"[01_]").hasMatch(c)) {
             this.index += 1;
             this.buffer += c;
-          } else {
+          } else if (WHITESPACE.contains(c) || NEWLINES.contains(c) || c == null) {
             return _parseBinary(this.buffer);
+          } else {
+            throw "Unexpected '$c'";
           }
           break;
         case KdlTokenizerContext.singleLineComment:
