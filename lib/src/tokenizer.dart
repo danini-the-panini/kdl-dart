@@ -32,6 +32,7 @@ enum KdlToken {
   SEMICOLON,
   EOF,
   SLASHDASH,
+  ESCLINE,
 }
 
 
@@ -164,14 +165,18 @@ class KdlTokenizer {
           }
         } else if (c == "\\") {
           var t = KdlTokenizer(this.str, start: this.index + 1);
-          var la = t.nextToken()[0];
-          if (la == KdlToken.NEWLINE) {
+          var la = t.nextToken();
+          if (la[0] == KdlToken.NEWLINE || la[0] == KdlToken.EOF) {
             this.index = t.index;
-          } else if (la == KdlToken.WS && t.nextToken()[0] == KdlToken.NEWLINE) {
-            this.index = t.index;
-          } else {
-            throw "Unexpected '\\'";
+            return [KdlToken.ESCLINE, "\\${la[1]}"];
+          } else if (la[0] == KdlToken.WS) {
+            var lan = t.nextToken();
+            if (lan[0] == KdlToken.NEWLINE || lan[0] == KdlToken.EOF) {
+              this.index = t.index;
+              return [KdlToken.ESCLINE, "\\${la[1]}${lan[1]}"];
+            }
           }
+          throw "Unexpected '\\'";
         } else if (SYMBOLS.containsKey(c)) {
           this.index += 1;
           return [SYMBOLS[c], c];
@@ -343,16 +348,6 @@ class KdlTokenizer {
           if (WHITESPACE.contains(c)) {
             this.index += 1;
             this.buffer += c;
-          } else if (c == "\\") {
-            var t = KdlTokenizer(this.str, start: this.index + 1);
-            var la = t.nextToken()[0];
-            if (la == KdlToken.NEWLINE) {
-              this.index = t.index;
-            } else if (la == KdlToken.WS && t.nextToken()[0] == KdlToken.NEWLINE) {
-              this.index = t.index;
-            } else {
-              throw "Unexpected '\\'";
-            }
           } else if (c == "/" && _charAt(this.index + 1) == '*') {
             _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;

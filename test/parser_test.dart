@@ -184,11 +184,9 @@ void main() {
   });
 
   test('escline', () {
-    expect(parser.parse("\\\nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\\n  foo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\  \t \nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\ // test \nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\ // test \n  foo"), equals(KdlDocument([KdlNode('foo')])));
+    expect(parser.parse("foo\\\n  1"), equals(KdlDocument([KdlNode('foo', arguments: [KdlInt(1)])])));
+    expect(() { parser.parse("node\\\nnode2"); }, throwsA(anything));
+    expect(() { parser.parse("node\n  \\\n//comment\n  node2"); }, throwsA(anything));
   });
 
   test('whitespace', () {
@@ -239,11 +237,11 @@ void main() {
   test('node_names', () {
     var doc = parser.parse(r"""
       "!@#$@$%Q#$%~@!40" "1.2.3" "!!!!!"=true
-      foo123~!@#$%^&*.:'|/?+ "weeee"
+      foo123~!@#$%^&*.:'|?+ "weeee"
     """.trim());
     var nodes = KdlDocument([
       KdlNode(r"!@#$@$%Q#$%~@!40", arguments: [KdlString("1.2.3")], properties: { "!!!!!": KdlBool(true) }),
-      KdlNode(r"foo123~!@#$%^&*.:'|/?+", arguments: [KdlString("weeee")])
+      KdlNode(r"foo123~!@#$%^&*.:'|?+", arguments: [KdlString("weeee")])
     ]);
     expect(doc, equals(nodes));
   });

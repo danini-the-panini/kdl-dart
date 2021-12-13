@@ -32,6 +32,7 @@ class KdlParser {
     var commented = false;
     if (tokenizer.peekToken()[0] == KdlToken.SLASHDASH) {
       tokenizer.nextToken();
+      _eatWhitespace();
       commented = true;
     }
 
@@ -51,7 +52,6 @@ class KdlParser {
   }
 
   _identifier() {
-    _eatWhitespace();
     var t = tokenizer.peekToken();
     if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING || t[0] == KdlToken.RAWSTRING) {
       tokenizer.nextToken();
@@ -62,7 +62,10 @@ class KdlParser {
 
   _eatWhitespace() {
     var t = tokenizer.peekToken();
-    if (t[0] == KdlToken.WS) tokenizer.nextToken();
+    while (t[0] == KdlToken.WS || t[0] == KdlToken.ESCLINE) {
+      tokenizer.nextToken();
+      t = tokenizer.peekToken();
+    }
   }
 
   _eatLinespaces() {
@@ -97,6 +100,7 @@ class KdlParser {
       case KdlToken.SLASHDASH:
         commented = true;
         tokenizer.nextToken();
+        _eatWhitespace();
         break;
       case KdlToken.NEWLINE:
       case KdlToken.EOF:
