@@ -203,4 +203,23 @@ title \\
     expect(tokenizer.nextToken(), equals([KdlToken.EOF, '']));
     expect(tokenizer.nextToken(), equals([false, false]));
   });
+
+  test('types', () {
+    var tokenizer = KdlTokenizer("(foo)bar");
+    expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
+    expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'bar']));
+
+    tokenizer = KdlTokenizer("(foo)/*asdf*/bar");
+    expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
+    expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
+    expect(() => tokenizer.nextToken(), throwsA(anything));
+
+    tokenizer = KdlTokenizer("(foo/*asdf*/)bar");
+    expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
+    expect(() => tokenizer.nextToken(), throwsA(anything));
+  });
 }

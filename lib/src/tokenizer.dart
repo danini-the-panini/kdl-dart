@@ -79,6 +79,8 @@ class KdlTokenizer {
   KdlTokenizerContext? previousContext = null;
   int commentNesting = 0;
   Queue peekedTokens = Queue();
+  bool inType = false;
+  KdlToken? lastToken = null;
 
   KdlTokenizer(String str, { int start: 0 }) {
     this.str = str;
@@ -92,17 +94,17 @@ class KdlTokenizer {
 
   peekToken() {
     if (this.peekedTokens.isEmpty) {
-      this.peekedTokens.add(_readNextToken());
+      this.peekedTokens.add(_nextToken());
     }
     return this.peekedTokens.first;
   }
 
   peekTokenAfterNext() {
     if (this.peekedTokens.isEmpty) {
-      this.peekedTokens.add(_readNextToken());
-      this.peekedTokens.add(_readNextToken());
+      this.peekedTokens.add(_nextToken());
+      this.peekedTokens.add(_nextToken());
     } else if (this.peekedTokens.length == 1) {
-      this.peekedTokens.add(_readNextToken());
+      this.peekedTokens.add(_nextToken());
     }
     return this.peekedTokens.elementAt(1);
   }
@@ -111,8 +113,14 @@ class KdlTokenizer {
     if (this.peekedTokens.isNotEmpty) {
       return this.peekedTokens.removeFirst();
     } else {
-      return this._readNextToken();
-    }
+      return _nextToken();
+    } 
+  }
+
+  _nextToken() {
+    var token = this._readNextToken();
+    if (token[0] != false) lastToken = token[0];
+    return token;
   }
 
   _readNextToken() {
@@ -179,6 +187,8 @@ class KdlTokenizer {
           }
           throw "Unexpected '\\'";
         } else if (SYMBOLS.containsKey(c)) {
+          if (c == '(') inType = true;
+          if (c == ')') inType = false;
           this.index += 1;
           return [SYMBOLS[c], c];
         } else if (c == "\r") {
@@ -196,9 +206,11 @@ class KdlTokenizer {
         } else if (c == "/") {
           var n = _charAt(this.index + 1);
           if (n == '/') {
+            if (inType || lastToken == KdlToken.RPAREN) throw "Unexpected '/'";
             _setContext(KdlTokenizerContext.singleLineComment);
             this.index += 2;
           } else if (n == '*') {
+            if (inType || lastToken == KdlToken.RPAREN) throw "Unexpected '/'";
             _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;
             this.index += 2;
