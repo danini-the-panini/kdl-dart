@@ -88,14 +88,14 @@ void main() {
   });
 
   test('float', () {
-    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0)])])));
-    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(0.0)])])));
-    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(-1.0)])])));
-    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0)])])));
-    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0e10)])])));
-    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0e-10)])])));
-    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(123456789.0)])])));
-    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(123456789.0)])])));
+    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
+    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(0.0)])])));
+    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(-1.0)])])));
+    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
+    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e10)])])));
+    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e-10)])])));
+    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
+    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
     expect(() { parser.parse('node ?1.0'); }, throwsA(anything));
     expect(() { parser.parse('node _1.0'); }, throwsA(anything));
     expect(() { parser.parse('node 1._0'); }, throwsA(anything));

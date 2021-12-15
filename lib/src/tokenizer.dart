@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'package:big_decimal/big_decimal.dart';
 
 enum KdlTokenizerContext {
   ident,
@@ -378,14 +379,14 @@ class KdlTokenizer {
   _parseDecimal(String s) {
     if (RegExp("[.eE]").hasMatch(s)) {
       _checkFloat(s);
-      return [KdlToken.FLOAT, double.parse(_munchUnderscores(s))];
+      return [KdlToken.FLOAT, BigDecimal.parse(_munchUnderscores(s))];
     }
     _checkInt(s);
-    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 10)];
+    return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 10)];
   }
 
   _checkFloat(String s) {
-    if (!RegExp(r"^[+-]?[0-9][0-9_]*(\.[0-9][0-9_]*([eE][+-]?[0-9][0-9_]*)?)?$").hasMatch(s)) {
+    if (!RegExp(r"^[+-]?[0-9][0-9_]*(\.[0-9][0-9_]*)?([eE][+-]?[0-9][0-9_]*)?$").hasMatch(s)) {
       throw "Invalid float: ${s}";
     }
   }
@@ -398,17 +399,17 @@ class KdlTokenizer {
   
   _parseHexadecimal(String s) {
     if (!RegExp(r"^[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s)) throw "Invalid hexadecimal: ${s}";
-    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 16)];
+    return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s),  16)];
   }
   
   _parseOctal(String s) {
     if (!RegExp(r"^[0-7][0-7_]*$").hasMatch(s)) throw "Invalid octal: ${s}";
-    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 8)];
+    return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 8)];
   }
   
   _parseBinary(String s) {
     if (!RegExp(r"^[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
-    return [KdlToken.INTEGER, int.parse(_munchUnderscores(s), radix: 2)];
+    return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 2)];
   }
 
   _munchUnderscores(String s) {
@@ -436,5 +437,13 @@ class KdlTokenizer {
       }
       return String.fromCharCode(i);
     });
+  }
+
+  _parseInteger(String string, int radix) {
+    try {
+      return int.parse(string, radix: radix);
+    } catch (FormatException) {
+      return BigInt.parse(string, radix: radix);
+    }
   }
 }

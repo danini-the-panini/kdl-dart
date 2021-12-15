@@ -1,4 +1,5 @@
 import "package:kdl/src/string_dumper.dart";
+import 'package:big_decimal/big_decimal.dart';
 
 _sameNodes(List<KdlNode> nodes, List<KdlNode> otherNodes) {
   if (nodes.length != otherNodes.length) return false;
@@ -114,7 +115,7 @@ abstract class KdlValue<T> {
   static KdlValue from(v, [String? type]) {
     if (v is String) return KdlString(v, type);
     if (v is int) return KdlInt(v, type);
-    if (v is double) return KdlFloat(v, type);
+    if (v is BigDecimal) return KdlFloat(v, type);
     if (v is bool) return KdlBool(v, type);
     if (v == null) return KdlNull(type);
     throw "No KDL value for ${v}";
@@ -151,18 +152,24 @@ class KdlString extends KdlValue<String> {
   }
 }
 
-class KdlFloat extends KdlValue<double> {
-  KdlFloat(double value, [String? type]) : super(value, type);
+class KdlFloat extends KdlValue<BigDecimal> {
+  KdlFloat(BigDecimal value, [String? type]) : super(value, type);
+  KdlFloat.from(num value, [String? type]) : super(BigDecimal.parse(value.toString()), type);
 
   @override
   bool operator ==(other) => other is KdlFloat && this.value == other.value;
 
   @override
   int get hashCode => value.hashCode;
+
+  @override
+  String _stringifyValue() {
+    return value.toString().toUpperCase();
+  }
 }
 
-class KdlInt extends KdlValue<int> {
-  KdlInt(int value, [String? type]) : super(value, type);
+class KdlInt<I> extends KdlValue<I> {
+  KdlInt(I value, [String? type]) : super(value, type);
 
   @override
   bool operator ==(other) => other is KdlInt && this.value == other.value;

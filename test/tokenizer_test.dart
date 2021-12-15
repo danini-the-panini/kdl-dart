@@ -1,5 +1,5 @@
-
 import 'package:test/test.dart';
+import 'package:big_decimal/big_decimal.dart';
 
 import '../lib/src/tokenizer.dart';
 
@@ -47,7 +47,7 @@ void main() {
   });
 
   test('float', () {
-    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.FLOAT, 1.23]));
+    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.FLOAT, BigDecimal.parse('1.23')]));
   });
 
   test('boolean', () {
