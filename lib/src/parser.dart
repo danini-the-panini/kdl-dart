@@ -1,11 +1,19 @@
 import 'package:kdl/src/document.dart';
 import 'package:kdl/src/tokenizer.dart';
+import 'package:kdl/src/types.dart';
 
 class KdlParser {
   late KdlTokenizer tokenizer;
+  late Map<String, Function> typeParsers;
 
-  parse(String string) {
+  parse(String string, { Map<String, Function> typeParsers = const {}, bool parseTypes = true }) {
     this.tokenizer = KdlTokenizer(string);
+
+    if (parseTypes) {
+      this.typeParsers = { ...KdlTypes.MAPPING, ...typeParsers };
+    } else {
+      this.typeParsers = {};
+    }
 
     return _document();
   }
@@ -151,19 +159,28 @@ class KdlParser {
   _value() {
     var type = _type();
     var t = tokenizer.nextToken();
+    var v = _valueWithoutType(t);
+    if (type == null) {
+      return v;
+    } else {
+      return v.asType(type, typeParsers[type]);
+    }
+  }
+
+  _valueWithoutType(List t) {
     switch (t[0]) {
       case KdlToken.STRING:
       case KdlToken.RAWSTRING:
-        return KdlString(t[1], type);
+        return KdlString(t[1]);
       case KdlToken.INTEGER:
-        return KdlInt(t[1], type);
+        return KdlInt(t[1]);
       case KdlToken.FLOAT:
-        return KdlFloat(t[1], type);
+        return KdlFloat(t[1]);
       case KdlToken.TRUE:
       case KdlToken.FALSE:
-        return KdlBool(t[1], type);
+        return KdlBool(t[1]);
       case KdlToken.NULL:
-        return KdlNull(type);
+        return KdlNull();
       default:
         throw "Expected value, got ${t[0]}";
     }
