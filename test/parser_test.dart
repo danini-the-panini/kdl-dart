@@ -4,7 +4,7 @@ import 'package:kdl/src/document.dart';
 import 'package:kdl/src/parser.dart';
 
 void main() {
-  KdlParser parser;
+  late KdlParser parser;
 
   setUp(() {
     parser = KdlParser();
@@ -88,14 +88,14 @@ void main() {
   });
 
   test('float', () {
-    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0)])])));
-    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(0.0)])])));
-    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(-1.0)])])));
-    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0)])])));
-    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0e10)])])));
-    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(1.0e-10)])])));
-    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(123456789.0)])])));
-    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat(123456789.0)])])));
+    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
+    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(0.0)])])));
+    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(-1.0)])])));
+    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
+    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e10)])])));
+    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e-10)])])));
+    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
+    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
     expect(() { parser.parse('node ?1.0'); }, throwsA(anything));
     expect(() { parser.parse('node _1.0'); }, throwsA(anything));
     expect(() { parser.parse('node 1._0'); }, throwsA(anything));
@@ -184,11 +184,9 @@ void main() {
   });
 
   test('escline', () {
-    expect(parser.parse("\\\nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\\n  foo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\  \t \nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\ // test \nfoo"), equals(KdlDocument([KdlNode('foo')])));
-    expect(parser.parse("\\ // test \n  foo"), equals(KdlDocument([KdlNode('foo')])));
+    expect(parser.parse("foo\\\n  1"), equals(KdlDocument([KdlNode('foo', arguments: [KdlInt(1)])])));
+    expect(() { parser.parse("node\\\nnode2"); }, throwsA(anything));
+    expect(() { parser.parse("node\n  \\\n//comment\n  node2"); }, throwsA(anything));
   });
 
   test('whitespace', () {
@@ -239,11 +237,11 @@ void main() {
   test('node_names', () {
     var doc = parser.parse(r"""
       "!@#$@$%Q#$%~@!40" "1.2.3" "!!!!!"=true
-      foo123~!@#$%^&*.:'|/?+ "weeee"
+      foo123~!@#$%^&*.:'|?+ "weeee"
     """.trim());
     var nodes = KdlDocument([
       KdlNode(r"!@#$@$%Q#$%~@!40", arguments: [KdlString("1.2.3")], properties: { "!!!!!": KdlBool(true) }),
-      KdlNode(r"foo123~!@#$%^&*.:'|/?+", arguments: [KdlString("weeee")])
+      KdlNode(r"foo123~!@#$%^&*.:'|?+", arguments: [KdlString("weeee")])
     ]);
     expect(doc, equals(nodes));
   });

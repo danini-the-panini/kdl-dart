@@ -2,7 +2,7 @@ import 'package:kdl/src/document.dart';
 import 'package:kdl/src/tokenizer.dart';
 
 class KdlParser {
-  KdlTokenizer tokenizer;
+  late KdlTokenizer tokenizer;
 
   parse(String string) {
     this.tokenizer = KdlTokenizer(string);
@@ -32,13 +32,16 @@ class KdlParser {
     var commented = false;
     if (tokenizer.peekToken()[0] == KdlToken.SLASHDASH) {
       tokenizer.nextToken();
+      _eatWhitespace();
       commented = true;
     }
 
-    var node;
+    var node, type;
     try {
-      node = KdlNode(_identifier());
-    } catch (_) {
+      type = _type();
+      node = KdlNode(_identifier(), type: type);
+    } catch (error) {
+      if (type != null) throw error;
       return false;
     }
 
@@ -49,9 +52,8 @@ class KdlParser {
   }
 
   _identifier() {
-    _eatWhitespace();
     var t = tokenizer.peekToken();
-    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING) {
+    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING || t[0] == KdlToken.RAWSTRING) {
       tokenizer.nextToken();
       return t[1];
     }
@@ -60,7 +62,10 @@ class KdlParser {
 
   _eatWhitespace() {
     var t = tokenizer.peekToken();
-    if (t[0] == KdlToken.WS) tokenizer.nextToken();
+    while (t[0] == KdlToken.WS || t[0] == KdlToken.ESCLINE) {
+      tokenizer.nextToken();
+      t = tokenizer.peekToken();
+    }
   }
 
   _eatLinespaces() {
@@ -85,7 +90,7 @@ class KdlParser {
         }
         commented = false;
         break;
-      case KdlToken.LPAREN:
+      case KdlToken.LBRACE:
         var children = _children();
         if (!commented) {
           node.children = children;
@@ -95,6 +100,7 @@ class KdlParser {
       case KdlToken.SLASHDASH:
         commented = true;
         tokenizer.nextToken();
+        _eatWhitespace();
         break;
       case KdlToken.NEWLINE:
       case KdlToken.EOF:
@@ -135,31 +141,40 @@ class KdlParser {
   }
 
   _children() {
-    _expect(KdlToken.LPAREN);
+    _expect(KdlToken.LBRACE);
     var nodes = _nodes();
     _eatLinespaces();
-    _expect(KdlToken.RPAREN);
+    _expect(KdlToken.RBRACE);
     return nodes;
   }
 
   _value() {
+    var type = _type();
     var t = tokenizer.nextToken();
     switch (t[0]) {
       case KdlToken.STRING:
       case KdlToken.RAWSTRING:
-        return KdlString(t[1]);
+        return KdlString(t[1], type);
       case KdlToken.INTEGER:
-        return KdlInt(t[1]);
+        return KdlInt(t[1], type);
       case KdlToken.FLOAT:
-        return KdlFloat(t[1]);
+        return KdlFloat(t[1], type);
       case KdlToken.TRUE:
       case KdlToken.FALSE:
-        return KdlBool(t[1]);
+        return KdlBool(t[1], type);
       case KdlToken.NULL:
-        return KdlNull();
+        return KdlNull(type);
       default:
         throw "Expected value, got ${t[0]}";
     }
+  }
+
+  _type() {
+    if (tokenizer.peekToken()[0] != KdlToken.LPAREN) return null;
+    _expect(KdlToken.LPAREN);
+    var type = _identifier();
+    _expect(KdlToken.RPAREN);
+    return type;
   }
 
   _expect(KdlToken type) {

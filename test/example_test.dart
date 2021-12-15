@@ -22,8 +22,8 @@ class VarArgsFunction<T> {
 }
 
 main() {
-  KdlNode currentNode = null;
-  KdlDocument currentDocument = null;
+  KdlNode? currentNode = null;
+  KdlDocument? currentDocument = null;
 
   dynamic _ = VarArgsFunction((args) {
     var argv = List.from(args);
@@ -41,9 +41,9 @@ main() {
     block.call();
     currentNode = previousNode;
     if (currentNode != null) {
-      currentNode.children.add(node);
+      currentNode!.children.add(node);
     } else {
-      currentDocument.nodes.add(node);
+      currentDocument!.nodes.add(node);
     }
   });
 

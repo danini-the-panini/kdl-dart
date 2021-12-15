@@ -1,3 +1,6 @@
+import "package:kdl/src/string_dumper.dart";
+import 'package:big_decimal/big_decimal.dart';
+
 _sameNodes(List<KdlNode> nodes, List<KdlNode> otherNodes) {
   if (nodes.length != otherNodes.length) return false;
 
@@ -23,25 +26,28 @@ class KdlDocument {
 
   @override
   String toString() {
-    return nodes.map((e) => e.toString()).join("\n");
+    return nodes.map((e) => e.toString()).join("\n") + "\n";
   }
 }
 
 class KdlNode {
   String name = '';
+  String? type = null;
   List<KdlNode> children = [];
   List<KdlValue> arguments = [];
   Map<String, KdlValue> properties = {};
 
   KdlNode(String name, {
-    List<KdlNode> children = null,
-    List<KdlValue> arguments = null,
-    Map<String, KdlValue> properties = null
+    List<KdlNode>? children = null,
+    List<KdlValue>? arguments = null,
+    Map<String, KdlValue>? properties = null,
+    String? type = null
   }) {
     this.name = name;
     this.children = children ?? [];
     this.arguments = arguments ?? [];
     this.properties = properties ?? {};
+    this.type = type;
   }
 
   @override
@@ -60,15 +66,18 @@ class KdlNode {
   }
 
   String _toStringWithIndentation(int indentation) {
-    String s = "${"  " * indentation}${name}";
+    String indent = "    " * indentation;
+    String typeStr = type != null ? "(${_idToString(type!)})" : "";
+    String s = "${indent}${typeStr}${_idToString(name)}";
     if (arguments.isNotEmpty) {
       s += " ${arguments.map((a) => a.toString()).join(' ')}";
     }
     if (properties.isNotEmpty) {
-      s += " ${properties.entries.map((e) => "${e.key}=${e.value}").join(' ')}";
+      s += " ${properties.entries.map((e) => "${_idToString(e.key)}=${e.value}").join(' ')}";
     }
     if (children.isNotEmpty) {
-      s += " {\n${children.map((e) => e._toStringWithIndentation(indentation + 1)).join("\n")}\n${"  " * indentation}}";
+      var childrenStr = children.map((e) => e._toStringWithIndentation(indentation + 1)).join("\n");
+      s += " {\n${childrenStr}\n${indent}}";
     }
     return s;
   }
@@ -88,25 +97,48 @@ class KdlNode {
 
     return properties.entries.every((element) => otherProps[element.key] == element.value);
   }
+
+  _idToString(String id) {
+    return StringDumper(id).stringifyIdentifier();
+  }
 }
 
-abstract class KdlValue {
-  static KdlValue from(v) {
-    if (v is String) return KdlString(v);
-    if (v is int) return KdlInt(v);
-    if (v is double) return KdlFloat(v);
-    if (v is bool) return KdlBool(v);
-    if (v == null) return KdlNull();
+abstract class KdlValue<T> {
+  late T value;
+  String? type = null;
+
+  KdlValue(T value, [String? type]) {
+    this.value = value;
+    this.type = type;
+  }
+
+  static KdlValue from(v, [String? type]) {
+    if (v is String) return KdlString(v, type);
+    if (v is int) return KdlInt(v, type);
+    if (v is BigDecimal) return KdlFloat(v, type);
+    if (v is bool) return KdlBool(v, type);
+    if (v == null) return KdlNull(type);
     throw "No KDL value for ${v}";
   }
+
+  @override
+  String toString() {
+    if (type == null) {
+      return _stringifyValue();
+    } else {
+      return "(${StringDumper(type!).stringifyIdentifier()})${_stringifyValue()}";
+    }
+  }
+
+  String _stringifyValue() {
+    // TODO: format?
+
+    return value.toString();
+  }
 }
 
-class KdlString extends KdlValue {
-  String value = "";
-
-  KdlString(value) {
-    this.value = value;
-  }
+class KdlString extends KdlValue<String> {
+  KdlString(String value, [String? type]) : super(value, type);
 
   @override
   bool operator ==(other) => other is KdlString && this.value == other.value;
@@ -115,17 +147,14 @@ class KdlString extends KdlValue {
   int get hashCode => value.hashCode;
 
   @override
-  String toString() {
-    return "\"${value}\""; // TODO: escape string
+  String _stringifyValue() {
+    return StringDumper(value).dump();
   }
 }
 
-class KdlFloat extends KdlValue {
-  double value = 0.0;
-
-  KdlFloat(value) {
-    this.value = value;
-  }
+class KdlFloat extends KdlValue<BigDecimal> {
+  KdlFloat(BigDecimal value, [String? type]) : super(value, type);
+  KdlFloat.from(num value, [String? type]) : super(BigDecimal.parse(value.toString()), type);
 
   @override
   bool operator ==(other) => other is KdlFloat && this.value == other.value;
@@ -134,36 +163,23 @@ class KdlFloat extends KdlValue {
   int get hashCode => value.hashCode;
 
   @override
-  String toString() {
-    return value.toString();
+  String _stringifyValue() {
+    return value.toString().toUpperCase();
   }
 }
 
-class KdlInt extends KdlValue {
-  int value = 0;
-
-  KdlInt(value) {
-    this.value = value;
-  }
+class KdlInt<I> extends KdlValue<I> {
+  KdlInt(I value, [String? type]) : super(value, type);
 
   @override
   bool operator ==(other) => other is KdlInt && this.value == other.value;
 
   @override
   int get hashCode => value.hashCode;
-
-  @override
-  String toString() {
-    return value.toString();
-  }
 }
 
-class KdlBool extends KdlValue {
-  bool value = false;
-
-  KdlBool(value) {
-    this.value = value;
-  }
+class KdlBool extends KdlValue<bool> {
+  KdlBool(bool value, [String? type]) : super(value, type);
 
   @override
   bool operator ==(other) => other is KdlBool && this.value == other.value;
@@ -172,12 +188,14 @@ class KdlBool extends KdlValue {
   int get hashCode => value.hashCode;
 
   @override
-  String toString() {
+  String _stringifyValue() {
     return value ? 'true' : 'false';
   }
 }
 
-class KdlNull extends KdlValue {
+class KdlNull extends KdlValue<Null> {
+  KdlNull([String? type]) : super(null, type);
+
   @override
   bool operator ==(other) => other is KdlNull;
 
@@ -185,7 +203,7 @@ class KdlNull extends KdlValue {
   int get hashCode => null.hashCode;
 
   @override
-  String toString() {
+  String _stringifyValue() {
     return 'null';
   }
 }
