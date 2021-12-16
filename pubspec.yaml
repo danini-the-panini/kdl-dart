@@ -1,5 +1,5 @@
 name: kdl
-version: 1.0.0
+version: 1.0.0+1
 description: Dart implementation of the KDL Document Language
 repository: https://github.com/danini-the-panini/kdl-dart
 environment:
@@ -7,7 +7,6 @@ environment:
 dependencies:
   big_decimal: ^0.3.1
   string_scanner: ^1.1.0
-  punycode: ^1.0.0
 dev_dependencies:
   test: ^1.19.5
   path: ^1.8.0
