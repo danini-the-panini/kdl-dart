@@ -1,7 +1,7 @@
 name: kdl
-version: 1.0.0-dev
+version: 1.0.0
 description: Dart implementation of the KDL Document Language
-repository: https://github.com/jellymann/kdl-dart
+repository: https://github.com/danini-the-panini/kdl-dart
 environment:
   sdk: ">=2.12.0 <3.0.0"
 dependencies:
