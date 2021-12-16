@@ -47,7 +47,7 @@ class KdlParser {
     var node, type;
     try {
       type = _type();
-      node = KdlNode(_identifier(), type: type);
+      node = KdlNode(_identifier());
     } catch (error) {
       if (type != null) throw error;
       return false;
@@ -56,6 +56,10 @@ class KdlParser {
     _argsPropsChildren(node);
 
     if (commented) return null;
+
+    if (type != null) {
+      return node.asType(type, typeParsers[type]);
+    }
     return node;
   }
 

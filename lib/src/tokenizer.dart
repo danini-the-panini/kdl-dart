@@ -58,14 +58,14 @@ class KdlTokenizer {
 
   static const NEWLINES = ["\u000A", "\u0085", "\u000C", "\u2028", "\u2029"];
 
-  static var NON_IDENTIFIER_CHARS = [
+  static final NON_IDENTIFIER_CHARS = [
     null,
     ...WHITESPACE,
     ...NEWLINES,
     ...SYMBOLS.keys,
     "\r", "\\", "<", ">", "[", "]", '"', ",", "/",
     List.generate(0x20, (index) => String.fromCharCode(index))];
-  static var NON_INITIAL_IDENTIFIER_CHARS = [
+  static final NON_INITIAL_IDENTIFIER_CHARS = [
     ...NON_IDENTIFIER_CHARS,
     List.generate(10, (index) => index.toString())
   ];
