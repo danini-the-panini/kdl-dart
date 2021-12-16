@@ -65,6 +65,23 @@ class KdlNode {
     return _toStringWithIndentation(0);
   }
 
+  KdlNode asType(String type, [Function? parser]) {
+    if (parser == null) {
+      this.type = type;
+      return this;
+    }
+
+    var result = parser(this, type);
+
+    if (result == null) return this.asType(type);
+
+    if (!(result is KdlNode)) {
+      throw "expected parser to return an instance of KdlNode, got ${result.runtimeType}";
+    }
+
+    return result;
+  }
+
   String _toStringWithIndentation(int indentation) {
     String indent = "    " * indentation;
     String typeStr = type != null ? "(${_idToString(type!)})" : "";
@@ -107,7 +124,7 @@ abstract class KdlValue<T> {
   late T value;
   String? type = null;
 
-  KdlValue(T value, [String? type]) {
+  KdlValue(this.value, [this.type]) {
     this.value = value;
     this.type = type;
   }
@@ -130,9 +147,23 @@ abstract class KdlValue<T> {
     }
   }
 
-  String _stringifyValue() {
-    // TODO: format?
+  asType(String type, [Function? parser]) {
+    if (parser == null) {
+      this.type = type;
+      return this;
+    }
 
+    var result = parser(this, type);
+    if (result == null) return asType(type);
+
+    if (!(result is KdlValue)) {
+      throw "expected parser to return an instance of KdlValue, got ${result.runtimeType}";
+    }
+
+    return result;
+  }
+
+  String _stringifyValue() {
     return value.toString();
   }
 }
