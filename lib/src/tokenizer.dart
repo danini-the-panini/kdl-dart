@@ -82,7 +82,7 @@ class KdlTokenizer {
   bool inType = false;
   KdlToken? lastToken = null;
 
-  KdlTokenizer(String str, { int start: 0 }) {
+  KdlTokenizer(String str, { int start = 0 }) {
     this.str = str;
     this.index = start;
   }
