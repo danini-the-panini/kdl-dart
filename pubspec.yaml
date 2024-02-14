@@ -5,8 +5,8 @@ repository: https://github.com/danini-the-panini/kdl-dart
 environment:
   sdk: ">=2.12.0 <3.0.0"
 dependencies:
-  big_decimal: ^0.3.1
-  string_scanner: ^1.1.0
+  big_decimal: ^0.5.0
+  string_scanner: ^1.2.0
 dev_dependencies:
-  test: ^1.19.5
-  path: ^1.8.0
+  test: ^1.25.2
+  path: ^1.9.0
