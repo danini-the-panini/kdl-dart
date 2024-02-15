@@ -116,7 +116,7 @@ class KdlNode {
   }
 
   _idToString(String id) {
-    return StringDumper(id).stringifyIdentifier();
+    return StringDumper(id).dump();
   }
 }
 
@@ -143,7 +143,7 @@ abstract class KdlValue<T> {
     if (type == null) {
       return _stringifyValue();
     } else {
-      return "(${StringDumper(type!).stringifyIdentifier()})${_stringifyValue()}";
+      return "(${StringDumper(type!).dump()})${_stringifyValue()}";
     }
   }
 
@@ -220,7 +220,7 @@ class KdlBool extends KdlValue<bool> {
 
   @override
   String _stringifyValue() {
-    return value ? 'true' : 'false';
+    return value ? '#true' : '#false';
   }
 }
 
@@ -235,6 +235,6 @@ class KdlNull extends KdlValue<Null> {
 
   @override
   String _stringifyValue() {
-    return 'null';
+    return '#null';
   }
 }

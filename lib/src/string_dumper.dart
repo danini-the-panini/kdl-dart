@@ -1,3 +1,5 @@
+import 'package:kdl/src/tokenizer.dart';
+
 class StringDumper {
   String string = '';
 
@@ -6,15 +8,9 @@ class StringDumper {
   }
 
   String dump() {
-    return "\"${string.runes.map(_escape).join('')}\"";
-  }
+    if (_isBareIdentifier()) return string;
 
-  String stringifyIdentifier() {
-    if (_isBareIdentifier()) {
-      return string;
-    } else {
-      return dump();
-    }
+    return "\"${string.runes.map(_escape).join('')}\"";
   }
 
   String _escape(int rune) {
@@ -26,14 +22,26 @@ class StringDumper {
       case 34: return "\\\"";
       case 8: return "\\b";
       case 12: return "\\f";
-      default: return String.fromCharCodes([rune]);
+      default: return String.fromCharCode(rune);
     }
   }
 
-  static final ESCAPE_CHARS = RegExp.escape("\\/(){}<>;[]=,\"");
-  static final BARE_ID_RGX = RegExp("^([^0-9\\-+\\s${ESCAPE_CHARS}][^\\s${ESCAPE_CHARS}]*|" +
-                                    "[\\-+](?!true|false|null)[^0-9\\s${ESCAPE_CHARS}][^\\s${ESCAPE_CHARS}]*)\$");
+  static final FORBIDDEN = [
+    ...KdlTokenizer.SYMBOLS.keys.map((e) => e.runes.single),
+    ...KdlTokenizer.WHITESPACE.map((e) => e.runes.single),
+    ...KdlTokenizer.NEWLINES.map((e) => e.runes.single),
+    ..."()[]/\\\"#".runes,
+    ...List.generate(0x20, (e) => e),
+  ];
+
   bool _isBareIdentifier() {
-    return BARE_ID_RGX.hasMatch(string);
+    if (
+      ['', 'true', 'fase', 'null', '#true', '#false', '#null'].contains(string) ||
+      RegExp(r"^\.?\d").hasMatch(string)
+    ) {
+      return false;
+    }
+    
+    return !string.runes.any((c) => FORBIDDEN.contains(c));
   }
 }
