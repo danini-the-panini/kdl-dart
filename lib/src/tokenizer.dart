@@ -75,10 +75,11 @@ class KdlTokenizer {
     ...NEWLINES,
     ...SYMBOLS.keys,
     "\r", "\\", "[", "]", "(", ")", '"', "/",
-    ...charRange(0x000, 0x0020)];
+    ...charRange(0x000, 0x0020),
+  ];
   static final NON_INITIAL_IDENTIFIER_CHARS = [
     ...NON_IDENTIFIER_CHARS,
-    ...List.generate(10, (index) => index.toString())
+    ...List.generate(10, (index) => index.toString()),
   ];
 
   static final FORBIDDEN = [
@@ -168,7 +169,7 @@ class KdlTokenizer {
           if (_charAt(this.index + 1) == "\n") {
             _setContext(KdlTokenizerContext.multiLineString);
             this.buffer = '';
-            this.index += 1;
+            this.index += 2;
           } else {
             _setContext(KdlTokenizerContext.string);
             this.buffer = '';
@@ -215,7 +216,7 @@ class KdlTokenizer {
           this.index += 1;
         } else if (c == '-') {
           var n = _charAt(this.index + 1);
-          if (RegExp(r"[0-9]").hasMatch(n)) {
+          if (n != null && RegExp(r"[0-9]").hasMatch(n)) {
             _setContext(KdlTokenizerContext.decimal);
           } else {
             _setContext(KdlTokenizerContext.ident);
@@ -250,6 +251,7 @@ class KdlTokenizer {
             var lan = t.nextToken();
             if (lan[0] == KdlToken.NEWLINE || lan[0] == KdlToken.EOF) {
               this.index = t.index;
+              _setContext(KdlTokenizerContext.whitespace);
               this.buffer = "${c}${la[1]}";
               if (lan[0] == KdlToken.NEWLINE) {
                 this.buffer += "\n";
@@ -263,8 +265,6 @@ class KdlTokenizer {
           this.buffer = c;
           this.index += 1;
         } else if (SYMBOLS.containsKey(c)) {
-          if (c == '(') inType = true;
-          if (c == ')') inType = false;
           this.index += 1;
           return [SYMBOLS[c], c];
         } else if (c == "\r") {
@@ -286,7 +286,6 @@ class KdlTokenizer {
             _setContext(KdlTokenizerContext.singleLineComment);
             this.index += 2;
           } else if (n == '*') {
-            if (inType || lastToken == KdlToken.RPAREN) throw "Unexpected '/'";
             _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;
             this.index += 2;
@@ -312,6 +311,14 @@ class KdlTokenizer {
           _setContext(KdlTokenizerContext.ident);
           this.buffer = c;
           this.index += 1;
+        } else if (c == '(') {
+          this.inType = true;
+          this.index += 1;
+          return [KdlToken.LPAREN, c];
+        } else if (c == ')') {
+          this.inType = false;
+          this.index += 1;
+          return [KdlToken.RPAREN, c];
         } else {
           throw "Unexpected character '${c}'";
         }
@@ -323,17 +330,18 @@ class KdlTokenizer {
             this.buffer += c;
             break;
           } else {
-            switch (this.buffer) {
-            case 'true': return [KdlToken.TRUE, true];
-            case 'false': return [KdlToken.FALSE, false];
-            case 'null': return [KdlToken.NULL, null];
-            default: return [KdlToken.IDENT, this.buffer];
+            if (['true', 'false', 'null'].contains(this.buffer)) {
+              throw "Identifier cannot be a literal";
+            } else if (RegExp(r"^\.\d").hasMatch(this.buffer)) {
+              throw "Identifier cannot look like an illegal float";
+            } else {
+              return [KdlToken.IDENT, this.buffer];
             }
           }
         case KdlTokenizerContext.keyword:
-          if (RegExp(r"[a-z]").hasMatch(c)) {
+          if (c != null && RegExp(r"[a-z]").hasMatch(c)) {
             this.index += 1;
-            this.buffer = c;
+            this.buffer += c;
           } else {
             switch (this.buffer) {
             case '#true': return [KdlToken.TRUE, true];
@@ -352,7 +360,7 @@ class KdlTokenizer {
             break;
           case '"':
             this.index += 1;
-            var string = _convertEscapes(this.buffer)
+            var string = _convertEscapes(this.buffer);
             string = this.context == KdlTokenizerContext.multiLineString ? _unindent(string) : string;
             return [KdlToken.STRING, string];
           case '':
@@ -364,6 +372,7 @@ class KdlTokenizer {
           }
           break;
         case KdlTokenizerContext.rawstring:
+        case KdlTokenizerContext.multiLineRawstring:
           if (c == null) {
             throw "Unterminated rawstring literal";
           }
@@ -375,7 +384,8 @@ class KdlTokenizer {
             }
             if (h == this.rawstringHashes) {
               this.index += 1 + h;
-              return [KdlToken.RAWSTRING, this.buffer];
+              var string = this.context == KdlTokenizerContext.multiLineRawstring ? _unindent(this.buffer) : this.buffer;
+              return [KdlToken.RAWSTRING, string];
             }
           }
 
@@ -452,6 +462,29 @@ class KdlTokenizer {
           if (WHITESPACE.contains(c)) {
             this.index += 1;
             this.buffer += c;
+          } else if (EQUALS.contains(c)) {
+            _setContext(KdlTokenizerContext.equals);
+            this.buffer += c;
+            this.index += 1;
+          } else if (c == "\\") {
+            var t = KdlTokenizer(this.str, start: this.index + 1);
+            var la = t.nextToken();
+            if (la[0] == KdlToken.NEWLINE || la[0] == KdlToken.EOF) {
+              this.index = t.index;
+              this.buffer += "${c}${la[1]}";
+              continue;
+            } else if (la[0] == KdlToken.WS) {
+              var lan = t.nextToken();
+              if (lan[0] == KdlToken.NEWLINE || lan[0] == KdlToken.EOF) {
+                this.index = t.index;
+                this.buffer += "${c}${la[1]}";
+                if (lan[0] == KdlToken.NEWLINE) {
+                  this.buffer += "\n";
+                }
+                continue;
+              }
+            }
+            throw "Unexpected '\\'";
           } else if (c == "/" && _charAt(this.index + 1) == '*') {
             _setContext(KdlTokenizerContext.multiLineComment);
             this.commentNesting = 1;
@@ -460,6 +493,14 @@ class KdlTokenizer {
             return [KdlToken.WS, this.buffer];
           }
           break;
+        case KdlTokenizerContext.equals:
+          var t = KdlTokenizer(this.str, start: this.index);
+          var la = t.nextToken();
+          if (la[0] == KdlToken.WS) {
+            this.buffer += la[1];
+            this.index = t.index;
+          }
+          return [KdlToken.EQUALS, this.buffer];
         case null:
           throw "Unexpected null context";
         }
@@ -468,13 +509,14 @@ class KdlTokenizer {
   }
 
   _charAt(int i) {
-    if (i < 0 || i >= this.str.length) {
+    if (i < 0 || i >= this.str.runes.length) {
       return null;
     }
-    if (FORBIDDEN.contains(this.str[i])) {
-      throw "Forbidden character: ${this.str[i]}";
+    var char = String.fromCharCode(str.runes.elementAt(i));
+    if (FORBIDDEN.contains(char)) {
+      throw "Forbidden character: ${char}";
     }
-    return this.str[i];
+    return char;
   }
 
   _revertContext() {
@@ -491,12 +533,22 @@ class KdlTokenizer {
   }
 
   _parseDecimal(String s) {
-    if (RegExp("[.eE]").hasMatch(s)) {
-      _checkFloat(s);
-      return [KdlToken.FLOAT, BigDecimal.parse(_munchUnderscores(s))];
+    try {
+      if (RegExp("[.eE]").hasMatch(s)) {
+        _checkFloat(s);
+        return [KdlToken.FLOAT, BigDecimal.parse(_munchUnderscores(s))];
+      }
+      _checkInt(s);
+      return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 10)];
+    } catch (e) {
+      if (
+        NON_INITIAL_IDENTIFIER_CHARS.contains(String.fromCharCode(s.runes.first)) ||
+        s.runes.skip(1).any((c) => NON_IDENTIFIER_CHARS.contains(String.fromCharCode(c)))
+      ) {
+        throw e;
+      }
+      return [KdlToken.IDENT, s];
     }
-    _checkInt(s);
-    return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 10)];
   }
 
   _checkFloat(String s) {
@@ -531,8 +583,9 @@ class KdlTokenizer {
   }
 
   _convertEscapes(String string) {
-    return string.replaceAllMapped(RegExp(r"\\[^u]"), (match) {
-      switch (match.group(0)) {
+    return string.replaceAllMapped(RegExp(r"\\(\s+|[^u])"), (match) {
+      var m = match.group(0);
+      switch (m) {
         case r'\n': return "\n";
         case r'\r': return "\r";
         case r'\t': return "\t";
@@ -540,8 +593,11 @@ class KdlTokenizer {
         case r'\"': return "\"";
         case r'\b': return "\b";
         case r'\f': return "\f";
-        case r'\/': return "/";
-        default: throw "Unexpected escape '${match.group(0)}'";
+        case "\\\n": return "";
+        case r'\s': return ' ';
+        default: 
+          if (m != null && RegExp(r"\\\s+").hasMatch(m)) return '';
+          throw "Unexpected escape '${match.group(0)}'";
       }
     }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{1,6}\}"), (match) {
       String m = match.group(0) ?? '';
@@ -564,11 +620,13 @@ class KdlTokenizer {
   _unindent(String string) {
     var [...lines, indent] = string.split("\n");
 
-    if (!indent.isEmpty && indent.split('').any((c) => !WHITESPACE.contains(c))) {
-      throw "Invalid multiline string final line";
-    }
-    if (lines.any((line) => !line.startsWith(indent))) {
-      throw "Invalid multiline string indentation";
+    if (!indent.isEmpty) {
+      if (indent.split('').any((c) => !WHITESPACE.contains(c))) {
+        throw "Invalid multiline string final line";
+      }
+      if (lines.any((line) => !line.startsWith(indent))) {
+        throw "Invalid multiline string indentation";
+      }
     }
 
     return lines.map((line) => line.substring(indent.length)).join("\n");

@@ -103,7 +103,7 @@ void main() {
   });
 
   test('multiple_tokens', () {
-    var tokenizer = KdlTokenizer("node 1 two a=3");
+    var tokenizer = KdlTokenizer("node 1 \"two\" a=3");
 
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'node']));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, ' ']));
@@ -219,9 +219,7 @@ title \\
     """.trim());
 
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'title']));
-    expect(tokenizer.nextToken(), equals([KdlToken.WS, ' ']));
-    expect(tokenizer.nextToken(), equals([KdlToken.ESCLINE, "\\\n"]));
-    expect(tokenizer.nextToken(), equals([KdlToken.WS, '  ']));
+    expect(tokenizer.nextToken(), equals([KdlToken.WS, " \\\n  "]));
     expect(tokenizer.nextToken(), equals([KdlToken.STRING, 'Some title']));
     expect(tokenizer.nextToken(), equals([KdlToken.EOF, '']));
     expect(tokenizer.nextToken(), equals([false, false]));
