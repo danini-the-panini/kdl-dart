@@ -58,7 +58,12 @@ void main() {
   });
 
   test('float', () {
-    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.FLOAT, BigDecimal.parse('1.23')]));
+    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.DECIMAL, BigDecimal.parse('1.23')]));
+    expect(KdlTokenizer("#inf").nextToken(), equals([KdlToken.DOUBLE, double.infinity]));
+    expect(KdlTokenizer("#-inf").nextToken(), equals([KdlToken.DOUBLE, -double.infinity]));
+    var nan = KdlTokenizer("#nan").nextToken();
+    expect(nan[0], equals(KdlToken.DOUBLE));
+    expect(nan[1], isNaN);
   });
 
   test('boolean', () {
@@ -236,11 +241,12 @@ title \\
     expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
     expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
-    expect(() => tokenizer.nextToken(), throwsA(anything));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'bar']));
 
     tokenizer = KdlTokenizer("(foo/*asdf*/)bar");
     expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
-    expect(() => tokenizer.nextToken(), throwsA(anything));
+    expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'bar']));
   });
 }

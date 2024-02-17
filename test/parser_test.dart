@@ -87,7 +87,7 @@ void main() {
     expect(parser.parse(r'node -flag'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("-flag")])])));
     expect(parser.parse(r'node --flagg'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("--flagg")])])));
     expect(parser.parse(r'node "\u{10FFF}"'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("\u{10FFF}")])])));
-    expect(parser.parse(r'node "\"\\\/\b\f\n\r\t"'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("\"\\/\u{08}\u{0C}\n\r\t")])])));
+    expect(parser.parse(r'node "\"\\\b\f\n\r\t"'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("\"\\\u{08}\u{0C}\n\r\t")])])));
     expect(parser.parse(r'node "\u{10}"'), equals(KdlDocument([KdlNode('node', arguments: [KdlString("\u{10}")])])));
     expect(() { parser.parse(r'node "\i"'); }, throwsA(anything));
     expect(() { parser.parse(r'node "\u{c0ffee}"'); }, throwsA(anything));
@@ -101,14 +101,14 @@ void main() {
   });
 
   test('float', () {
-    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
-    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(0.0)])])));
-    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(-1.0)])])));
-    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0)])])));
-    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e10)])])));
-    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(1.0e-10)])])));
-    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
-    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlFloat.from(123456789.0)])])));
+    expect(parser.parse('node 1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(1.0)])])));
+    expect(parser.parse('node 0.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(0.0)])])));
+    expect(parser.parse('node -1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(-1.0)])])));
+    expect(parser.parse('node +1.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(1.0)])])));
+    expect(parser.parse('node 1.0e10'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(1.0e10)])])));
+    expect(parser.parse('node 1.0e-10'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(1.0e-10)])])));
+    expect(parser.parse('node 123_456_789.0'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(123456789.0)])])));
+    expect(parser.parse('node 123_456_789.0_'), equals(KdlDocument([KdlNode('node', arguments: [KdlBigDecimal.from(123456789.0)])])));
     expect(() { parser.parse('node 1._0'); }, throwsA(anything));
     expect(() { parser.parse('node 1.'); }, throwsA(anything));
     expect(() { parser.parse('node 1.0v2'); }, throwsA(anything));
@@ -334,7 +334,7 @@ value"
       bignum 1_000_000
     """.trim());
     var nodes = KdlDocument([
-      KdlNode('num', arguments: [KdlFloat(BigDecimal.parse('1.234e-42'))]),
+      KdlNode('num', arguments: [KdlBigDecimal(BigDecimal.parse('1.234e-42'))]),
       KdlNode('my-hex', arguments: [KdlInt(0xdeadbeef)]),
       KdlNode('my-octal', arguments: [KdlInt(493)]),
       KdlNode('my-binary', arguments: [KdlInt(173)]),
