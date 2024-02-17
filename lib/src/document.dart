@@ -132,7 +132,8 @@ abstract class KdlValue<T> {
   static KdlValue from(v, [String? type]) {
     if (v is String) return KdlString(v, type);
     if (v is int) return KdlInt(v, type);
-    if (v is BigDecimal) return KdlFloat(v, type);
+    if (v is double) return KdlDouble(v, type);
+    if (v is BigDecimal) return KdlBigDecimal(v, type);
     if (v is bool) return KdlBool(v, type);
     if (v == null) return KdlNull(type);
     throw "No KDL value for ${v}";
@@ -183,18 +184,47 @@ class KdlString extends KdlValue<String> {
   }
 }
 
-class KdlFloat extends KdlValue<BigDecimal> {
-  KdlFloat(BigDecimal value, [String? type]) : super(value, type);
-  KdlFloat.from(num value, [String? type]) : super(BigDecimal.parse(value.toString()), type);
+class KdlBigDecimal extends KdlValue<BigDecimal> {
+  KdlBigDecimal(BigDecimal value, [String? type]) : super(value, type);
+  KdlBigDecimal.from(num value, [String? type]) : super(BigDecimal.parse(value.toString()), type);
 
   @override
-  bool operator ==(other) => other is KdlFloat && this.value == other.value;
+  bool operator ==(other) {
+    if (other is KdlBigDecimal) return this.value == other.value;
+    if (other is KdlDouble) return this.value == other.value;
+    return false;
+  }
 
   @override
   int get hashCode => value.hashCode;
 
   @override
   String _stringifyValue() {
+    return value.toString().toUpperCase();
+  }
+}
+
+class KdlDouble extends KdlValue<double> {
+  KdlDouble(double value, [String? type]) : super(value, type);
+
+  @override
+  bool operator ==(other) {
+    if (other is KdlDouble) {
+      if (this.value.isNaN && other.value.isNaN) return true;
+      return this.value == other.value;
+    }
+    return other is KdlBigDecimal && this.value == other.value;
+  }
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  String _stringifyValue() {
+    if (value.isNaN) return '#nan';
+    if (value == double.infinity) return '#inf';
+    if (value == -double.infinity) return '#-inf';
+
     return value.toString().toUpperCase();
   }
 }

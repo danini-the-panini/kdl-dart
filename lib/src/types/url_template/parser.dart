@@ -69,7 +69,7 @@ class URLTemplateParser {
               break;
             case null: return null;
             default:
-              buffer = c!;
+              buffer = c;
               index++;
               context = URLTemplateParserContext.Literal;
               break;
@@ -79,7 +79,7 @@ class URLTemplateParser {
           switch (c) {
             case '{': case null: return StringLiteral(buffer);
             default:
-              buffer += c!;
+              buffer += c;
               index++;
               break;
           }
@@ -93,7 +93,7 @@ class URLTemplateParser {
             case null:
               throw 'unterminated expansion';
             default:
-              buffer += c!;
+              buffer += c;
               index++;
               break;
           }

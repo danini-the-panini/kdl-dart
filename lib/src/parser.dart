@@ -211,8 +211,10 @@ class KdlParser {
         return KdlString(t[1]);
       case KdlToken.INTEGER:
         return KdlInt(t[1]);
-      case KdlToken.FLOAT:
-        return KdlFloat(t[1]);
+      case KdlToken.DECIMAL:
+        return KdlBigDecimal(t[1]);
+      case KdlToken.DOUBLE:
+        return KdlDouble(t[1]);
       case KdlToken.TRUE:
       case KdlToken.FALSE:
         return KdlBool(t[1]);

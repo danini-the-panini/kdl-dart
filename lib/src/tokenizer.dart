@@ -23,7 +23,8 @@ enum KdlToken {
   STRING,
   RAWSTRING,
   INTEGER,
-  FLOAT,
+  DECIMAL,
+  DOUBLE,
   TRUE,
   FALSE,
   NULL,
@@ -74,7 +75,7 @@ class KdlTokenizer {
     ...WHITESPACE,
     ...NEWLINES,
     ...SYMBOLS.keys,
-    "\r", "\\", "[", "]", "(", ")", '"', "/",
+    "\r", "\\", "[", "]", "(", ")", '"', "/", "#",
     ...charRange(0x000, 0x0020),
   ];
   static final NON_INITIAL_IDENTIFIER_CHARS = [
@@ -292,9 +293,7 @@ class KdlTokenizer {
             this.index += 2;
             return [KdlToken.SLASHDASH, '/-'];
           } else {
-            _setContext(KdlTokenizerContext.ident);
-            this.buffer = c;
-            this.index += 1;
+            throw "Unexpected character '${c}'";
           }
         } else if (WHITESPACE.contains(c)) {
           _setContext(KdlTokenizerContext.whitespace);
@@ -329,7 +328,7 @@ class KdlTokenizer {
             this.buffer += c;
             break;
           } else {
-            if (['true', 'false', 'null'].contains(this.buffer)) {
+            if (['true', 'false', 'null', 'inf', '-inf', 'nan'].contains(this.buffer)) {
               throw "Identifier cannot be a literal";
             } else if (RegExp(r"^\.\d").hasMatch(this.buffer)) {
               throw "Identifier cannot look like an illegal float";
@@ -338,7 +337,7 @@ class KdlTokenizer {
             }
           }
         case KdlTokenizerContext.keyword:
-          if (c != null && RegExp(r"[a-z]").hasMatch(c)) {
+          if (c != null && RegExp(r"[a-z\-]").hasMatch(c)) {
             this.index += 1;
             this.buffer += c;
           } else {
@@ -346,6 +345,9 @@ class KdlTokenizer {
             case '#true': return [KdlToken.TRUE, true];
             case '#false': return [KdlToken.FALSE, false];
             case '#null': return [KdlToken.NULL, null];
+            case '#inf': return [KdlToken.DOUBLE, double.infinity];
+            case '#-inf': return [KdlToken.DOUBLE, -double.infinity];
+            case '#nan': return [KdlToken.DOUBLE, double.nan];
             default: throw "Unknown keyword ${this.buffer}";
             }
           }
@@ -527,7 +529,7 @@ class KdlTokenizer {
     try {
       if (RegExp("[.eE]").hasMatch(s)) {
         _checkFloat(s);
-        return [KdlToken.FLOAT, BigDecimal.parse(_munchUnderscores(s))];
+        return [KdlToken.DECIMAL, BigDecimal.parse(_munchUnderscores(s))];
       }
       _checkInt(s);
       return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 10)];
