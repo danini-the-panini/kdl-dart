@@ -56,11 +56,14 @@ class KdlParser {
 
     switch (tokenizer.peekToken()[0]) {
       case KdlToken.WS:
+      case KdlToken.LBRACE:
         _argsPropsChildren(node);
         break;
       case KdlToken.SEMICOLON:
         tokenizer.nextToken();
         break;
+      case KdlToken.LPAREN:
+        throw "Unexpected (";
     }
 
     if (commented) return null;
