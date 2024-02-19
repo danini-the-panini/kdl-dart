@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import "package:kdl/src/string_dumper.dart";
 import 'package:big_decimal/big_decimal.dart';
 
@@ -11,11 +13,37 @@ _sameNodes(List<KdlNode> nodes, List<KdlNode> otherNodes) {
   return true;
 }
 
-class KdlDocument {
+class KdlDocument with IterableMixin<KdlNode> {
   List<KdlNode> nodes = [];
 
   KdlDocument(List<KdlNode> initialNodes) {
     this.nodes = initialNodes;
+  }
+
+  arg(key) {
+    return this[key].arguments.first.value;
+  }
+
+  args(key) {
+    return this[key].arguments.map((arg) => arg.value);
+  }
+
+  dashVals(key) {
+    return this[key]
+      .children
+      .where((node) => node.name == "-")
+      .map((node) => node.arguments.first)
+      .map((arg) => arg.value);
+  }
+
+  KdlNode operator [](key) {
+    if (key is int) {
+      return nodes[key];
+    } else if (key is String) {
+      return nodes.firstWhere((node) => node.name == key);
+    } else {
+      throw ArgumentError("document can only be indexed with Int/String");
+    }
   }
 
   @override
@@ -23,6 +51,9 @@ class KdlDocument {
 
   @override
   int get hashCode => nodes.hashCode;
+  
+  @override
+  Iterator<KdlNode> get iterator => nodes.iterator;
 
   @override
   String toString() {
@@ -30,7 +61,7 @@ class KdlDocument {
   }
 }
 
-class KdlNode {
+class KdlNode with IterableMixin<KdlNode> {
   String name = '';
   String? type = null;
   List<KdlNode> children = [];
@@ -50,6 +81,42 @@ class KdlNode {
     this.type = type;
   }
 
+  KdlNode child(key) {
+    if (key is int) {
+      return children[key];
+    } else if (key is String) {
+      return children.firstWhere((node) => node.name == key);
+    } else {
+      throw ArgumentError("node can only be indexed with Int/String");
+    }
+  }
+
+  arg(key) {
+    return child(key).arguments.first.value;
+  }
+
+  args(key) {
+    return child(key).arguments.map((arg) => arg.value);
+  }
+
+  dashVals(key) {
+    return child(key)
+      .children
+      .where((node) => node.name == "-")
+      .map((node) => node.arguments.first)
+      .map((arg) => arg.value);
+  }
+
+  operator [](key) {
+    if (key is int) {
+      return arguments[key].value;
+    } else if (key is String) {
+      return properties[key]?.value;
+    } else {
+      throw ArgumentError("node can only be indexed with Int/String");
+    }
+  }
+
   @override
   bool operator ==(other) => other is KdlNode
     && name == other.name
@@ -59,6 +126,9 @@ class KdlNode {
 
   @override
   int get hashCode => [children, arguments, properties].hashCode;
+  
+  @override
+  Iterator<KdlNode> get iterator => children.iterator;
 
   @override
   String toString() {
@@ -140,6 +210,13 @@ abstract class KdlValue<T> {
   }
 
   @override
+  bool operator ==(other) {
+    if (other is KdlValue) return this.value == other.value;
+
+    return this.value == other;
+  }
+
+  @override
   String toString() {
     if (type == null) {
       return _stringifyValue();
@@ -173,9 +250,6 @@ class KdlString extends KdlValue<String> {
   KdlString(String value, [String? type]) : super(value, type);
 
   @override
-  bool operator ==(other) => other is KdlString && this.value == other.value;
-
-  @override
   int get hashCode => value.hashCode;
 
   @override
@@ -192,7 +266,7 @@ class KdlBigDecimal extends KdlValue<BigDecimal> {
   bool operator ==(other) {
     if (other is KdlBigDecimal) return this.value == other.value;
     if (other is KdlDouble) return this.value == other.value;
-    return false;
+    return this.value == other;
   }
 
   @override
@@ -209,11 +283,11 @@ class KdlDouble extends KdlValue<double> {
 
   @override
   bool operator ==(other) {
-    if (other is KdlDouble) {
-      if (this.value.isNaN && other.value.isNaN) return true;
-      return this.value == other.value;
-    }
-    return other is KdlBigDecimal && this.value == other.value;
+    if (other is KdlDouble) return this == other.value;
+    if (other is KdlBigDecimal) return this.value == other.value;
+
+    if (this.value.isNaN && other is double && other.isNaN) return true;
+    return this.value == other;
   }
 
   @override
