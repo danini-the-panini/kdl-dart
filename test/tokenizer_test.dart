@@ -44,6 +44,15 @@ void main() {
 
   test('integer', () {
     expect(KdlTokenizer("123").nextToken(), equals([KdlToken.INTEGER, 123]));
+    expect(KdlTokenizer("0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, 0x0123456789abcdef]));
+    expect(KdlTokenizer("0o01234567").nextToken(), equals([KdlToken.INTEGER, 342391]));
+    expect(KdlTokenizer("0b101001").nextToken(), equals([KdlToken.INTEGER, 41]));
+    expect(KdlTokenizer("-0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, -0x0123456789abcdef]));
+    expect(KdlTokenizer("-0o01234567").nextToken(), equals([KdlToken.INTEGER, -342391]));
+    expect(KdlTokenizer("-0b101001").nextToken(), equals([KdlToken.INTEGER, -41]));
+    expect(KdlTokenizer("+0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, 0x0123456789abcdef]));
+    expect(KdlTokenizer("+0o01234567").nextToken(), equals([KdlToken.INTEGER, 342391]));
+    expect(KdlTokenizer("+0b101001").nextToken(), equals([KdlToken.INTEGER, 41]));
   });
 
   test('float', () {
