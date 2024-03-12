@@ -65,7 +65,7 @@ class KdlTokenizer {
     "\u1680", "\u2000", "\u2001", "\u2002",
     "\u2003", "\u2004", "\u2005", "\u2006",
     "\u2007", "\u2008", "\u2009", "\u200A",
-    "\u202F", "\u205F", "\u3000" 
+    "\u202F", "\u205F", "\u3000"
   ];
 
   static const NEWLINES = ["\u000A", "\u0085", "\u000C", "\u2028", "\u2029"];
@@ -151,7 +151,7 @@ class KdlTokenizer {
       return this.peekedTokens.removeFirst();
     } else {
       return _nextToken();
-    } 
+    }
   }
 
   _nextToken() {
@@ -217,8 +217,14 @@ class KdlTokenizer {
           this.index += 1;
         } else if (c == '-') {
           var n = _charAt(this.index + 1);
+          var n2 = _charAt(this.index + 2);
           if (n != null && RegExp(r"[0-9]").hasMatch(n)) {
-            _setContext(KdlTokenizerContext.decimal);
+            if (n == '0' && n2 != null && RegExp(r"[box]").hasMatch(n2)) {
+              _setContext(_integerContext(n2));
+              this.index += 2;
+            } else {
+              _setContext(KdlTokenizerContext.decimal);
+            }
           } else {
             _setContext(KdlTokenizerContext.ident);
           }
@@ -231,7 +237,7 @@ class KdlTokenizer {
             this.index += 2;
             this.buffer = '';
             _setContext(_integerContext(n));
-          } else if ((c == '-' || c == '+') && n == '0' && RegExp("[box]").hasMatch(n2)) {
+          } else if (c == '+' && n == '0' && RegExp("[box]").hasMatch(n2)) {
             this.index += 3;
             this.buffer = c;
             _setContext(_integerContext(n2));
@@ -558,23 +564,23 @@ class KdlTokenizer {
       throw "Invalid float: ${s}";
     }
   }
-  
+
   _checkInt(String s) {
     if (!RegExp(r"^[+-]?[0-9][0-9_]*$").hasMatch(s)) {
       throw "Invalid integer: ${s}";
     }
   }
-  
+
   _parseHexadecimal(String s) {
     if (!RegExp(r"^[+-]?[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s)) throw "Invalid hexadecimal: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s),  16)];
   }
-  
+
   _parseOctal(String s) {
     if (!RegExp(r"^[+-]?[0-7][0-7_]*$").hasMatch(s)) throw "Invalid octal: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 8)];
   }
-  
+
   _parseBinary(String s) {
     if (!RegExp(r"^[+-]?[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 2)];
@@ -597,7 +603,7 @@ class KdlTokenizer {
         case r'\f': return "\f";
         case "\\\n": return "";
         case r'\s': return ' ';
-        default: 
+        default:
           if (m != null && RegExp(r"\\\s+").hasMatch(m)) return '';
           throw "Unexpected escape '${match.group(0)}'";
       }
