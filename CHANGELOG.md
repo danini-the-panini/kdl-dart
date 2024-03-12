@@ -1,3 +1,7 @@
+## v1.0.1 (2024-12-16)
+
+- Fix incorrect parsing of signed hex/oct/bin
+
 ## v1.0.0+1 (2021-12-16)
 
 - Remove unused punycode dependency
