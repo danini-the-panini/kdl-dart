@@ -217,8 +217,14 @@ class KdlTokenizer {
           this.index += 1;
         } else if (c == '-') {
           var n = _charAt(this.index + 1);
+          var n2 = _charAt(this.index + 2);
           if (n != null && RegExp(r"[0-9]").hasMatch(n)) {
-            _setContext(KdlTokenizerContext.decimal);
+            if (n == '0' && n2 != null && RegExp(r"[box]").hasMatch(n2)) {
+              _setContext(_integerContext(n2));
+              this.index += 2;
+            } else {
+              _setContext(KdlTokenizerContext.decimal);
+            }
           } else {
             _setContext(KdlTokenizerContext.ident);
           }
@@ -226,14 +232,15 @@ class KdlTokenizer {
           this.index += 1;
         } else if (c != null && RegExp(r"[0-9+]").hasMatch(c)) {
           var n = _charAt(this.index + 1);
+          var n2 = _charAt(this.index + 2);
           if (c == '0' && n != null && RegExp("[box]").hasMatch(n)) {
             this.index += 2;
             this.buffer = '';
-            switch (n) {
-              case 'b': _setContext(KdlTokenizerContext.binary); break;
-              case 'o': _setContext(KdlTokenizerContext.octal); break;
-              case 'x': _setContext(KdlTokenizerContext.hexadecimal); break;
-            }
+            _setContext(_integerContext(n));
+          } else if (c == '+' && n == '0' && RegExp("[box]").hasMatch(n2)) {
+            this.index += 3;
+            this.buffer = c;
+            _setContext(_integerContext(n2));
           } else {
             _setContext(KdlTokenizerContext.decimal);
             this.index += 1;
@@ -525,6 +532,14 @@ class KdlTokenizer {
     this.previousContext = null;
   }
 
+  _integerContext(String n) {
+    switch (n) {
+      case 'b': return KdlTokenizerContext.binary;
+      case 'o': return KdlTokenizerContext.octal;
+      case 'x': return KdlTokenizerContext.hexadecimal;
+    }
+  }
+
   _parseDecimal(String s) {
     try {
       if (RegExp("[.eE]").hasMatch(s)) {
@@ -557,17 +572,17 @@ class KdlTokenizer {
   }
   
   _parseHexadecimal(String s) {
-    if (!RegExp(r"^[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s)) throw "Invalid hexadecimal: ${s}";
+    if (!RegExp(r"^[+-]?[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s)) throw "Invalid hexadecimal: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s),  16)];
   }
   
   _parseOctal(String s) {
-    if (!RegExp(r"^[0-7][0-7_]*$").hasMatch(s)) throw "Invalid octal: ${s}";
+    if (!RegExp(r"^[+-]?[0-7][0-7_]*$").hasMatch(s)) throw "Invalid octal: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 8)];
   }
   
   _parseBinary(String s) {
-    if (!RegExp(r"^[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
+    if (!RegExp(r"^[+-]?[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
     return [KdlToken.INTEGER, _parseInteger(_munchUnderscores(s), 2)];
   }
 
@@ -592,7 +607,7 @@ class KdlTokenizer {
           if (m != null && RegExp(r"\\\s+").hasMatch(m)) return '';
           throw "Unexpected escape '${match.group(0)}'";
       }
-    }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{0,6}\}"), (match) {
+    }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{1,6}\}"), (match) {
       String m = match.group(0) ?? '';
       int i = int.parse(m.substring(3, m.length - 1), radix: 16);
       if (i < 0 || i > 0x10FFFF) {
