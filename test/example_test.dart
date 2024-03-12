@@ -75,8 +75,8 @@ main() {
               _("components", "rustfmt");
               _("override", true);
             });
-            _("step", "rustfmt", { "run": "cargo fmt --all -- --check" });
-            _("step", "docs", { "run": "cargo doc --no-deps" });
+            _("step", "rustfmt", () { _("run", "cargo", "fmt", "--all", "--", "--check"); });
+            _("step", "docs", () { _("run", "cargo", "doc", "--no-deps"); });
           });
         });
         _("build_and_test", "Build & Test", () {
@@ -96,8 +96,9 @@ main() {
               _("components", "clippy");
               _("override", true);
             });
-            _("step", "Clippy", { "run": "cargo clippy --all -- -D warnings" });
-            _("step", "Run tests", { "run": "cargo test --all --verbose" });
+            _("step", "Clippy", () { _("run", "cargo", "clippy", "--all", "--", "-D", "warnings"); });
+            _("step", "Run tests", () { _("run", "cargo", "test", "--all", "--verbose"); });
+            _("step", "Other Stuff", { "run": "  echo foo\n  echo bar\n  echo baz" });
           });
         });
       });
@@ -113,7 +114,7 @@ main() {
       _("package", () {
         _("name", "kdl");
         _("version", "0.0.0");
-        _("description", "kat's document language");
+        _("description", "The kdl document language");
         _("authors", "Kat Marchán <kzm@zkat.tech>");
         _("license-file", "LICENSE.md");
         _("edition", "2018");

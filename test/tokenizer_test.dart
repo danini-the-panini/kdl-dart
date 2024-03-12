@@ -17,6 +17,8 @@ void main() {
   test('identifier', () {
     expect(KdlTokenizer("foo").nextToken(), equals([KdlToken.IDENT, "foo"]));
     expect(KdlTokenizer("foo-bar123").nextToken(), equals([KdlToken.IDENT, "foo-bar123"]));
+    expect(KdlTokenizer("-").nextToken(), equals([KdlToken.IDENT, "-"]));
+    expect(KdlTokenizer("--").nextToken(), equals([KdlToken.IDENT, "--"]));
   });
 
   test('string', () {
@@ -26,57 +28,82 @@ void main() {
   });
 
   test('rawstring', () {
-    expect(KdlTokenizer('r"foo\\nbar"').nextToken(), equals([KdlToken.RAWSTRING, "foo\\nbar"]));
-    expect(KdlTokenizer('r#"foo"bar"#').nextToken(), equals([KdlToken.RAWSTRING, "foo\"bar"]));
-    expect(KdlTokenizer('r##"foo"#bar"##').nextToken(), equals([KdlToken.RAWSTRING, "foo\"#bar"]));
-    expect(KdlTokenizer('r#""foo""#').nextToken(), equals([KdlToken.RAWSTRING, "\"foo\""]));
+    expect(KdlTokenizer('#"foo\\nbar"#').nextToken(), equals([KdlToken.RAWSTRING, "foo\\nbar"]));
+    expect(KdlTokenizer('#"foo"bar"#').nextToken(), equals([KdlToken.RAWSTRING, "foo\"bar"]));
+    expect(KdlTokenizer('##"foo"#bar"##').nextToken(), equals([KdlToken.RAWSTRING, "foo\"#bar"]));
+    expect(KdlTokenizer('#""foo""#').nextToken(), equals([KdlToken.RAWSTRING, "\"foo\""]));
 
-    var tokenizer = KdlTokenizer('node r"C:\\Users\\zkat\\"');
+    var tokenizer = KdlTokenizer('node #"C:\\Users\\zkat\\"#');
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, "node"]));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, " "]));
     expect(tokenizer.nextToken(), equals([KdlToken.RAWSTRING, "C:\\Users\\zkat\\"]));
 
-    tokenizer = KdlTokenizer('other-node r#"hello"world"#');
+    tokenizer = KdlTokenizer('other-node #"hello"world"#');
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, "other-node"]));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, " "]));
     expect(tokenizer.nextToken(), equals([KdlToken.RAWSTRING, "hello\"world"]));
   });
 
   test('integer', () {
-    expect(KdlTokenizer("123").nextToken(), equals([KdlToken.INTEGER, 123]));
+    expect(KdlTokenizer("0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, 0x0123456789abcdef]));
+    expect(KdlTokenizer("0o01234567").nextToken(), equals([KdlToken.INTEGER, 342391]));
+    expect(KdlTokenizer("0b101001").nextToken(), equals([KdlToken.INTEGER, 41]));
+    expect(KdlTokenizer("-0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, -0x0123456789abcdef]));
+    expect(KdlTokenizer("-0o01234567").nextToken(), equals([KdlToken.INTEGER, -342391]));
+    expect(KdlTokenizer("-0b101001").nextToken(), equals([KdlToken.INTEGER, -41]));
+    expect(KdlTokenizer("+0x0123456789abcdef").nextToken(), equals([KdlToken.INTEGER, 0x0123456789abcdef]));
+    expect(KdlTokenizer("+0o01234567").nextToken(), equals([KdlToken.INTEGER, 342391]));
+    expect(KdlTokenizer("+0b101001").nextToken(), equals([KdlToken.INTEGER, 41]));
   });
 
   test('float', () {
-    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.FLOAT, BigDecimal.parse('1.23')]));
+    expect(KdlTokenizer("1.23").nextToken(), equals([KdlToken.DECIMAL, BigDecimal.parse('1.23')]));
+    expect(KdlTokenizer("#inf").nextToken(), equals([KdlToken.DOUBLE, double.infinity]));
+    expect(KdlTokenizer("#-inf").nextToken(), equals([KdlToken.DOUBLE, -double.infinity]));
+    var nan = KdlTokenizer("#nan").nextToken();
+    expect(nan[0], equals(KdlToken.DOUBLE));
+    expect(nan[1], isNaN);
   });
 
   test('boolean', () {
-    expect(KdlTokenizer("true").nextToken(), equals([KdlToken.TRUE, true]));
-    expect(KdlTokenizer("false").nextToken(), equals([KdlToken.FALSE, false]));
+    expect(KdlTokenizer("#true").nextToken(), equals([KdlToken.TRUE, true]));
+    expect(KdlTokenizer("#false").nextToken(), equals([KdlToken.FALSE, false]));
   });
 
   test('null', () {
-    expect(KdlTokenizer("null").nextToken(), equals([KdlToken.NULL, null]));
+    expect(KdlTokenizer("#null").nextToken(), equals([KdlToken.NULL, null]));
   });
 
   test('symbols', () {
     expect(KdlTokenizer("{").nextToken(), equals([KdlToken.LBRACE, '{']));
     expect(KdlTokenizer("}").nextToken(), equals([KdlToken.RBRACE, '}']));
+  });
+
+  test('equals', () {
     expect(KdlTokenizer("=").nextToken(), equals([KdlToken.EQUALS, '=']));
+    expect(KdlTokenizer(" =").nextToken(), equals([KdlToken.EQUALS, ' =']));
+    expect(KdlTokenizer("= ").nextToken(), equals([KdlToken.EQUALS, '= ']));
+    expect(KdlTokenizer(" = ").nextToken(), equals([KdlToken.EQUALS, ' = ']));
+    expect(KdlTokenizer(" =foo").nextToken(), equals([KdlToken.EQUALS, ' =']));
+    expect(KdlTokenizer("\uFE66").nextToken(), equals([KdlToken.EQUALS, "\uFE66"]));
+    expect(KdlTokenizer("\uFF1D").nextToken(), equals([KdlToken.EQUALS, "\uFF1D"]));
+    expect(KdlTokenizer("🟰").nextToken(), equals([KdlToken.EQUALS, "🟰"]));
   });
 
   test('whitespace', () {
     expect(KdlTokenizer(" ").nextToken(), equals([KdlToken.WS, ' ']));
     expect(KdlTokenizer("\t").nextToken(), equals([KdlToken.WS, "\t"]));
     expect(KdlTokenizer("    \t").nextToken(), equals([KdlToken.WS, "    \t"]));
-  });
-
-  test('escline', () {
-    expect(KdlTokenizer("\\\n").nextToken(), equals([KdlToken.ESCLINE, "\\\n"]));
-    expect(KdlTokenizer("\\").nextToken(), equals([KdlToken.ESCLINE, "\\"]));
-    expect(KdlTokenizer("\\//some comment\n").nextToken(), equals([KdlToken.ESCLINE, "\\\n"]));
-    expect(KdlTokenizer("\\ //some comment\n").nextToken(), equals([KdlToken.ESCLINE, "\\ \n"]));
-    expect(KdlTokenizer("\\//some comment").nextToken(), equals([KdlToken.ESCLINE, "\\"]));
+    expect(KdlTokenizer("\\\n").nextToken(), equals([KdlToken.WS, "\\\n"]));
+    expect(KdlTokenizer("\\").nextToken(), equals([KdlToken.WS, "\\"]));
+    expect(KdlTokenizer("\\//some comment\n").nextToken(), equals([KdlToken.WS, "\\\n"]));
+    expect(KdlTokenizer("\\ //some comment\n").nextToken(), equals([KdlToken.WS, "\\ \n"]));
+    expect(KdlTokenizer("\\//some comment").nextToken(), equals([KdlToken.WS, "\\"]));
+    expect(KdlTokenizer(" \\\n").nextToken(), equals([KdlToken.WS, " \\\n"]));
+    expect(KdlTokenizer(" \\//some comment\n").nextToken(), equals([KdlToken.WS, " \\\n"]));
+    expect(KdlTokenizer(" \\ //some comment\n").nextToken(), equals([KdlToken.WS, " \\ \n"]));
+    expect(KdlTokenizer(" \\//some comment").nextToken(), equals([KdlToken.WS, " \\"]));
+    expect(KdlTokenizer(" \\\n  \\\n  ").nextToken(), equals([KdlToken.WS, " \\\n  \\\n  "]));
   });
 
   test('multiple_tokens', () {
@@ -196,9 +223,7 @@ title \\
     """.trim());
 
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'title']));
-    expect(tokenizer.nextToken(), equals([KdlToken.WS, ' ']));
-    expect(tokenizer.nextToken(), equals([KdlToken.ESCLINE, "\\\n"]));
-    expect(tokenizer.nextToken(), equals([KdlToken.WS, '  ']));
+    expect(tokenizer.nextToken(), equals([KdlToken.WS, " \\\n  "]));
     expect(tokenizer.nextToken(), equals([KdlToken.STRING, 'Some title']));
     expect(tokenizer.nextToken(), equals([KdlToken.EOF, '']));
     expect(tokenizer.nextToken(), equals([false, false]));
@@ -215,11 +240,12 @@ title \\
     expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
     expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
-    expect(() => tokenizer.nextToken(), throwsA(anything));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'bar']));
 
     tokenizer = KdlTokenizer("(foo/*asdf*/)bar");
     expect(tokenizer.nextToken(), equals([KdlToken.LPAREN, '(']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'foo']));
-    expect(() => tokenizer.nextToken(), throwsA(anything));
+    expect(tokenizer.nextToken(), equals([KdlToken.RPAREN, ')']));
+    expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'bar']));
   });
 }

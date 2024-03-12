@@ -10,16 +10,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container:
-      image:  google/dart:latest
-
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
-
-      - name: Print Dart SDK version
-        run: dart --version
+      
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
 
       - name: Install dependencies
         run: dart pub get
