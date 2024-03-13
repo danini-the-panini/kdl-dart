@@ -347,6 +347,7 @@ class KdlTokenizer {
           if (c != null && RegExp(r"[a-z\-]").hasMatch(c)) {
             this.index += 1;
             this.buffer += c;
+            break;
           } else {
             switch (this.buffer) {
             case '#true': return [KdlToken.TRUE, true];
