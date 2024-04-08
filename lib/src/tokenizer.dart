@@ -369,9 +369,8 @@ class KdlTokenizer {
             break;
           case '"':
             this.index += 1;
-            var string = _convertEscapes(this.buffer);
-            string = this.context == KdlTokenizerContext.multiLineString ? _unindent(string) : string;
-            return [KdlToken.STRING, string];
+            var string = this.context == KdlTokenizerContext.multiLineString ? _unindent(this.buffer) : this.buffer;
+            return [KdlToken.STRING, _convertEscapes(string)];
           case '':
             throw "Unterminated string literal";
           default:
