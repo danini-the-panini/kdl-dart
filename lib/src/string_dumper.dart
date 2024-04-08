@@ -36,7 +36,7 @@ class StringDumper {
 
   bool _isBareIdentifier() {
     if (
-      ['', 'true', 'fase', 'null', '#true', '#false', '#null'].contains(string) ||
+      ['', 'true', 'false', 'null', 'inf', '-inf', 'nan', '#true', '#false', '#null', '#inf', '#-inf', '#nan'].contains(string) ||
       RegExp(r"^\.?\d").hasMatch(string)
     ) {
       return false;

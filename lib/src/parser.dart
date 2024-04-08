@@ -91,14 +91,6 @@ class KdlParser {
     }
   }
 
-  _wsPlus() {
-    var t = tokenizer.peekToken();
-    if (t[0] != KdlToken.WS) {
-      return false;
-    }
-    _wsStar();
-  }
-
   _linespaceStar() {
     while (_isLinespace(tokenizer.peekToken())) {
       tokenizer.nextToken();
@@ -112,7 +104,7 @@ class KdlParser {
   _argsPropsChildren(KdlNode node) {
     var commented = false;
     while (true) {
-      _wsPlus();
+      _wsStar();
       switch (tokenizer.peekToken()[0]) {
       case KdlToken.IDENT:
         var t = tokenizer.peekTokenAfterNext();

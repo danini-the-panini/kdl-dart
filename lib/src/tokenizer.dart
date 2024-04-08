@@ -76,7 +76,7 @@ class KdlTokenizer {
     ...NEWLINES,
     ...SYMBOLS.keys,
     "\r", "\\", "[", "]", "(", ")", '"', "/", "#",
-    ...charRange(0x000, 0x0020),
+    ...charRange(0x0000, 0x0020),
   ];
   static final NON_INITIAL_IDENTIFIER_CHARS = [
     ...NON_IDENTIFIER_CHARS,
