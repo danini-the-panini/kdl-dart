@@ -1,6 +1,7 @@
 import 'package:kdl/src/document.dart';
 import 'package:kdl/src/tokenizer.dart';
 import 'package:kdl/src/types.dart';
+import 'package:kdl/src/exception.dart';
 
 class KdlParser {
   late KdlTokenizer tokenizer;
@@ -26,7 +27,7 @@ class KdlParser {
     var docVersion = tokenizer.versionDirective();
     if (docVersion == null) return;
     if (docVersion != parserVersion) {
-      throw "Version mismatch, document specified v${docVersion}, but this is a v${parserVersion} parser";
+      throw KdlVersionMismatchException(docVersion, parserVersion);
     }
   }
 
@@ -82,7 +83,7 @@ class KdlParser {
       tokenizer.nextToken();
       return t.value;
     }
-    throw "Expected identifier, got ${t.type}";
+    throw _ex("Expected identifier, got ${t.type}", t);
   }
 
   void _wsStar() {
@@ -107,20 +108,20 @@ class KdlParser {
     var commented = false;
     var hasChildren = false;
     while (true) {
-      var peek = tokenizer.peekToken().type;
-      switch (peek) {
+      var peek = tokenizer.peekToken();
+      switch (peek.type) {
         case KdlTerm.WS:
           _wsStar();
-          peek = tokenizer.peekToken().type;
-          if (peek == KdlTerm.SLASHDASH) {
+          peek = tokenizer.peekToken();
+          if (peek.type == KdlTerm.SLASHDASH) {
             _slashdash();
-            peek = tokenizer.peekToken().type;
+            peek = tokenizer.peekToken();
             commented = true;
           }
-          switch (peek) {
+          switch (peek.type) {
             case KdlTerm.STRING:
             case KdlTerm.IDENT:
-              if (hasChildren) throw "Unexpected ${peek}";
+              if (hasChildren) throw _ex("Unexpected ${peek.type}", peek);
               var t = tokenizer.peekTokenAfterNext();
               if (t.type == KdlTerm.EQUALS) {
                 var p = _prop();
@@ -146,7 +147,7 @@ class KdlParser {
               return;
             default:
               var v = _value();
-              if (hasChildren) throw "Unexpected ${peek}";
+              if (hasChildren) throw _ex("Unexpected ${peek.type}", peek);
               if (!commented) node.arguments.add(v);
               commented = false;
               break;
@@ -166,13 +167,13 @@ class KdlParser {
           _rbrace();
           return;
         default:
-          throw "Unexpected ${peek}";
+          throw _ex("Unexpected ${peek.type}", peek);
       }
     }
   }
 
   void _lbrace(KdlNode node, bool commented) {
-    if (!commented && node.hasChildren) throw "Unexpected {";
+    if (!commented && node.hasChildren) throw _ex("Unexpected {");
     depth += 1;
     var children = _children();
     depth -= 1;
@@ -229,7 +230,7 @@ class KdlParser {
       case KdlTerm.NULL:
         return KdlNull();
       default:
-        throw "Expected value, got ${t.type}";
+        throw _ex("Expected value, got ${t.type}", t);
     }
   }
 
@@ -245,35 +246,40 @@ class KdlParser {
   }
 
   void _slashdash() {
-    var t = tokenizer.nextToken().type;
-    if (t != KdlTerm.SLASHDASH) {
-      throw "Expected SLASHDASH, found ${t}";
+    var t = tokenizer.nextToken();
+    if (t.type != KdlTerm.SLASHDASH) {
+      throw _ex("Expected SLASHDASH, found ${t.type}", t);
     }
     _linespaceStar();
-    var peek = tokenizer.peekToken().type;
-    switch (peek) {
+    var peek = tokenizer.peekToken();
+    switch (peek.type) {
       case KdlTerm.RBRACE:
       case KdlTerm.EOF:
       case KdlTerm.SEMICOLON:
-        throw "Unexpected ${peek} after SLASHDASH";
+        throw _ex("Unexpected ${peek.type} after SLASHDASH", peek);
       default:
         break;
     }
   }
 
   _expect(KdlTerm type) {
-    var t = tokenizer.peekToken().type;
-    if (t == type) {
+    var t = tokenizer.peekToken();
+    if (t.type == type) {
       return tokenizer.nextToken().value;
     } else {
-      throw "Expected ${type}, got ${t}";
+      throw _ex("Expected ${type}, got ${t.type}", t);
     }
   }
 
   void _expectEndOfFile() {
-    var t = tokenizer.peekToken().type;
-    if (t == KdlTerm.EOF) return;
+    var t = tokenizer.peekToken();
+    if (t.type == KdlTerm.EOF) return;
 
-    throw "Expected EOF, got ${t}";
+    throw _ex("Expected EOF, got ${t.type}", t);
+  }
+
+  KdlParseException _ex(String message, [KdlToken? token = null]) {
+    token = token ?? tokenizer.peekToken();
+    return KdlParseException(message, token.line, token.column);
   }
 }

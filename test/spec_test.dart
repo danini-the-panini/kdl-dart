@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 
 import 'package:kdl/src/parser.dart';
+import 'package:kdl/src/exception.dart';
 
 void main() {
   KdlParser parser = KdlParser();
@@ -24,7 +25,7 @@ void main() {
     } else {
       test("$inputName does not parse", () async {
         var input = await inputFile.readAsString();
-        expect(() { parser.parse(input); }, throwsA(anything));
+        expect(() { parser.parse(input); }, throwsA(isA<KdlParseException>()));
       });
     }
   }

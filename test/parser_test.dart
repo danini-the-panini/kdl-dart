@@ -3,6 +3,7 @@ import 'package:test/test.dart';
 
 import 'package:kdl/src/document.dart';
 import 'package:kdl/src/parser.dart';
+import 'package:kdl/src/exception.dart';
 
 void main() {
   late KdlParser parser;
@@ -162,13 +163,13 @@ void main() {
         ])));
     expect(() {
       parser.parse(r'node "\i"');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse(r'node "\u{c0ffee}"');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse(r'node "oops');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('unindented multiline strings', () {
@@ -184,10 +185,10 @@ void main() {
         ])));
     expect(() {
       parser.parse('node """\n    foo\n  bar\n    baz\n    """');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node #"""\n    foo\n  bar\n    baz\n    """#');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('float', () {
@@ -233,19 +234,19 @@ void main() {
         ])));
     expect(() {
       parser.parse('node 1._0');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 1.');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 1.0v2');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node -1em');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node .0');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('integer', () {
@@ -299,13 +300,13 @@ void main() {
         ])));
     expect(() {
       parser.parse('node 0x_123');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0xg');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0xx');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('octal', () {
@@ -326,13 +327,13 @@ void main() {
         ])));
     expect(() {
       parser.parse('node 0o_123');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0o8');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0oo');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('binary', () {
@@ -358,13 +359,13 @@ void main() {
         ])));
     expect(() {
       parser.parse('node 0b_0110');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0b20');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node 0bb');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('raw_string', () {
@@ -395,7 +396,7 @@ void main() {
         ])));
     expect(() {
       parser.parse('node ##"foo"#');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('boolean', () {
@@ -470,13 +471,13 @@ void main() {
     expect(parser.parse("node\\\n "), equals(KdlDocument([KdlNode('node')])));
     expect(() {
       parser.parse('node \\foo');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node\\\\\nnode2');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node \\\\\nnode2');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('whitespace', () {
@@ -620,16 +621,16 @@ value
 
     expect(() {
       parser.parse('node """foo"""');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node #"""foo"""#');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node """\n  oops');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
     expect(() {
       parser.parse('node #"""\n  oops');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('numbers', () {
@@ -797,6 +798,6 @@ node {
 
     expect(() {
       parser.parse('/- kdl-version 1\nnode "foo"');
-    }, throwsA(anything));
+    }, throwsA(isA<KdlVersionMismatchException>()));
   });
 }

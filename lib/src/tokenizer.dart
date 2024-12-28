@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'package:big_decimal/big_decimal.dart';
+import 'package:kdl/src/exception.dart';
 
 enum KdlTokenizerContext {
   ident,
@@ -339,7 +340,7 @@ class KdlTokenizer {
               continue;
             }
           }
-          throw "Unexpected '\\'";
+          _throw("Unexpected '\\'");
         } else if (c == '=') {
           buffer = c;
           _setContext(KdlTokenizerContext.equals);
@@ -355,7 +356,7 @@ class KdlTokenizer {
           var n = _charAt(index + 1);
           if (n == '/') {
             if (inType || lastToken?.type == KdlTerm.RPAREN)
-              throw "Unexpected '/'";
+              _throw("Unexpected '/'");
             _setContext(KdlTokenizerContext.singleLineComment);
             _traverse(2);
           } else if (n == '*') {
@@ -366,7 +367,7 @@ class KdlTokenizer {
             _traverse(2);
             return _token(KdlTerm.SLASHDASH, '/-');
           } else {
-            throw "Unexpected character '${c}'";
+            _throw("Unexpected character '${c}'");
           }
         } else if (WHITESPACE.contains(c)) {
           buffer = c;
@@ -385,7 +386,7 @@ class KdlTokenizer {
           _traverse(1);
           return _token(KdlTerm.RPAREN, c);
         } else {
-          throw "Unexpected character '${c}'";
+          _throw("Unexpected character '${c}'");
         }
       } else {
         switch (context) {
@@ -397,9 +398,9 @@ class KdlTokenizer {
             } else {
               if (['true', 'false', 'null', 'inf', '-inf', 'nan']
                   .contains(buffer)) {
-                throw "Identifier cannot be a literal";
+                _throw("Identifier cannot be a literal");
               } else if (RegExp(r"^\.\d").hasMatch(buffer)) {
-                throw "Identifier cannot look like an illegal float";
+                _throw("Identifier cannot look like an illegal float");
               } else {
                 return _token(KdlTerm.IDENT, buffer);
               }
@@ -424,7 +425,7 @@ class KdlTokenizer {
                 case '#nan':
                   return _token(KdlTerm.DOUBLE, double.nan);
                 default:
-                  throw "Unknown keyword ${buffer}";
+                  _throw("Unknown keyword ${buffer}");
               }
             }
           case KdlTokenizerContext.string:
@@ -449,10 +450,10 @@ class KdlTokenizer {
                 return _token(KdlTerm.STRING, _unescape(buffer));
               case '':
               case null:
-                throw "Unterminated string literal";
+                _throw("Unterminated string literal");
               default:
                 if (NEWLINES.contains(c)) {
-                  throw "Unexpected NEWLINE in single-line string";
+                  _throw("Unexpected NEWLINE in single-line string");
                 }
                 buffer += c;
                 _traverse(1);
@@ -476,7 +477,7 @@ class KdlTokenizer {
                 _traverse(1);
                 break;
               case null:
-                throw "Unterminated multi-line string literal";
+                _throw("Unterminated multi-line string literal");
               default:
                 buffer += c;
                 _traverse(1);
@@ -485,7 +486,7 @@ class KdlTokenizer {
             break;
           case KdlTokenizerContext.rawstring:
             if (c == null) {
-              throw "Unterminated rawstring literal";
+              _throw("Unterminated rawstring literal");
             }
 
             if (c == '"') {
@@ -498,7 +499,7 @@ class KdlTokenizer {
                 return _token(KdlTerm.RAWSTRING, buffer);
               }
             } else if (NEWLINES.contains(c)) {
-              throw "Unexpected NEWLINE in single-line string";
+              _throw("Unexpected NEWLINE in single-line string");
             }
 
             buffer += c;
@@ -506,7 +507,7 @@ class KdlTokenizer {
             break;
           case KdlTokenizerContext.multiLineRawstring:
             if (c == null) {
-              throw "Unterminated multi-line rawstring literal";
+              _throw("Unterminated multi-line rawstring literal");
             }
 
             if (c == '"' &&
@@ -535,7 +536,7 @@ class KdlTokenizer {
                 c == null) {
               return _parseDecimal(buffer);
             } else {
-              throw "Unexpected '$c'";
+              _throw("Unexpected '$c'");
             }
             break;
           case KdlTokenizerContext.hexadecimal:
@@ -547,7 +548,7 @@ class KdlTokenizer {
                 c == null) {
               return _parseHexadecimal(buffer);
             } else {
-              throw "Unexpected '$c'";
+              _throw("Unexpected '$c'");
             }
             break;
           case KdlTokenizerContext.octal:
@@ -559,7 +560,7 @@ class KdlTokenizer {
                 c == null) {
               return _parseOctal(buffer);
             } else {
-              throw "Unexpected '$c'";
+              _throw("Unexpected '$c'");
             }
             break;
           case KdlTokenizerContext.binary:
@@ -571,7 +572,7 @@ class KdlTokenizer {
                 c == null) {
               return _parseBinary(buffer);
             } else {
-              throw "Unexpected '$c'";
+              _throw("Unexpected '$c'");
             }
             break;
           case KdlTokenizerContext.singleLineComment:
@@ -625,7 +626,7 @@ class KdlTokenizer {
                   continue;
                 }
               }
-              throw "Unexpected '\\'";
+              _throw("Unexpected '\\'");
             } else if (c == "/" && _charAt(index + 1) == '*') {
               commentNesting = 1;
               _setContext(KdlTokenizerContext.multiLineComment);
@@ -643,7 +644,7 @@ class KdlTokenizer {
             }
             return _token(KdlTerm.EQUALS, buffer);
           case null:
-            throw "Unexpected null context";
+            _throw("Unexpected null context");
         }
       }
     }
@@ -655,7 +656,7 @@ class KdlTokenizer {
     }
     var char = String.fromCharCode(str.runes.elementAt(i));
     if (FORBIDDEN.contains(char)) {
-      throw "Forbidden character: ${char}";
+      _throw("Forbidden character: ${char}");
     }
     return char;
   }
@@ -683,12 +684,16 @@ class KdlTokenizer {
     _traverse(i - index);
   }
 
-  _revertContext() {
+  void _throw(message) {
+    throw KdlParseException(message, line, column);
+  }
+
+  void _revertContext() {
     context = previousContext;
     previousContext = null;
   }
 
-  _expectNewline(int i) {
+  String _expectNewline(int i) {
     var c = _charAt(i);
     if (c == "\r") {
       var n = _charAt(i + 1);
@@ -696,7 +701,7 @@ class KdlTokenizer {
         return "${c}${n}";
       }
     } else if (!NEWLINES.contains(c)) {
-      throw "Expected NEWLINE, found '${c}'";
+      _throw("Expected NEWLINE, found '${c}'");
     }
     return c;
   }
@@ -735,30 +740,30 @@ class KdlTokenizer {
   _checkFloat(String s) {
     if (!RegExp(r"^[+-]?[0-9][0-9_]*(\.[0-9][0-9_]*)?([eE][+-]?[0-9][0-9_]*)?$")
         .hasMatch(s)) {
-      throw "Invalid float: ${s}";
+      _throw("Invalid float: ${s}");
     }
   }
 
   _checkInt(String s) {
     if (!RegExp(r"^[+-]?[0-9][0-9_]*$").hasMatch(s)) {
-      throw "Invalid integer: ${s}";
+      _throw("Invalid integer: ${s}");
     }
   }
 
   _parseHexadecimal(String s) {
     if (!RegExp(r"^[+-]?[0-9a-fA-F][0-9a-fA-F_]*$").hasMatch(s))
-      throw "Invalid hexadecimal: ${s}";
+      _throw("Invalid hexadecimal: ${s}");
     return _token(KdlTerm.INTEGER, _parseInteger(_munchUnderscores(s), 16));
   }
 
   _parseOctal(String s) {
     if (!RegExp(r"^[+-]?[0-7][0-7_]*$").hasMatch(s))
-      throw "Invalid octal: ${s}";
+      _throw("Invalid octal: ${s}");
     return _token(KdlTerm.INTEGER, _parseInteger(_munchUnderscores(s), 8));
   }
 
   _parseBinary(String s) {
-    if (!RegExp(r"^[+-]?[01][01_]*$").hasMatch(s)) throw "Invalid binary: ${s}";
+    if (!RegExp(r"^[+-]?[01][01_]*$").hasMatch(s)) _throw("Invalid binary: ${s}");
     return _token(KdlTerm.INTEGER, _parseInteger(_munchUnderscores(s), 2));
   }
 
@@ -798,7 +803,7 @@ class KdlTokenizer {
       String m = match.group(0) ?? '';
       int i = int.parse(m.substring(3, m.length - 1), radix: 16);
       if (i < 0 || i > 0x10FFFF || (i >= 0xD800 && i <= 0xDFFF)) {
-        throw "Invalid code point ${m}";
+        _throw("Invalid code point ${m}");
       }
       return String.fromCharCode(i);
     });
@@ -826,7 +831,7 @@ class KdlTokenizer {
         return ' ';
       default:
         if (m != null && RegExp("\\\\${UNESCAPE_WS}").hasMatch(m)) return '';
-        throw "Unexpected escape '${m}'";
+        _throw("Unexpected escape '${m}'");
     }
   }
 
@@ -841,7 +846,7 @@ class KdlTokenizer {
   _dedent(String string) {
     var [...lines, indent] = string.split(NEWLINES_PATTERN);
     if (!WS_STAR.hasMatch(indent)) {
-      throw "Invalid multiline string final line";
+      _throw("Invalid multiline string final line");
     }
 
     var valid = RegExp("${RegExp.escape(indent)}(.*)");
@@ -854,7 +859,7 @@ class KdlTokenizer {
       if (m != null) {
         return m.group(1);
       }
-      throw "Invalid multiline string indentation";
+      _throw("Invalid multiline string indentation");
     }).join("\n");
   }
 }
