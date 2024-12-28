@@ -25,6 +25,7 @@ void main() {
     expect(KdlTokenizer('"foo"').nextToken(), equals([KdlToken.STRING, "foo"]));
     expect(KdlTokenizer(r'"foo\nbar"').nextToken(), equals([KdlToken.STRING, "foo\nbar"]));
     expect(KdlTokenizer(r'"\u{10FFF}"').nextToken(), equals([KdlToken.STRING, "\u{10FFF}"]));
+    expect(KdlTokenizer('"\\\n\n\nfoo"').nextToken(), equals([KdlToken.STRING, "foo"]));
   });
 
   test('rawstring', () {
@@ -86,9 +87,6 @@ void main() {
     expect(KdlTokenizer("= ").nextToken(), equals([KdlToken.EQUALS, '= ']));
     expect(KdlTokenizer(" = ").nextToken(), equals([KdlToken.EQUALS, ' = ']));
     expect(KdlTokenizer(" =foo").nextToken(), equals([KdlToken.EQUALS, ' =']));
-    expect(KdlTokenizer("\uFE66").nextToken(), equals([KdlToken.EQUALS, "\uFE66"]));
-    expect(KdlTokenizer("\uFF1D").nextToken(), equals([KdlToken.EQUALS, "\uFF1D"]));
-    expect(KdlTokenizer("🟰").nextToken(), equals([KdlToken.EQUALS, "🟰"]));
   });
 
   test('whitespace', () {
@@ -161,7 +159,7 @@ node2
 
     var tokenizer = KdlTokenizer("""
 smile "😁"
-ノード お名前＝"☜(ﾟヮﾟ☜)"
+ノード お名前="☜(ﾟヮﾟ☜)"
     """.trim());
 
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'smile']));
@@ -171,7 +169,7 @@ smile "😁"
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'ノード']));
     expect(tokenizer.nextToken(), equals([KdlToken.WS, ' ']));
     expect(tokenizer.nextToken(), equals([KdlToken.IDENT, 'お名前']));
-    expect(tokenizer.nextToken(), equals([KdlToken.EQUALS, '＝']));
+    expect(tokenizer.nextToken(), equals([KdlToken.EQUALS, '=']));
     expect(tokenizer.nextToken(), equals([KdlToken.STRING, '☜(ﾟヮﾟ☜)']));
     expect(tokenizer.nextToken(), equals([KdlToken.EOF, '']));
     expect(tokenizer.nextToken(), equals([false, false]));

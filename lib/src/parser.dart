@@ -6,17 +6,28 @@ class KdlParser {
   late KdlTokenizer tokenizer;
   late Map<String, Function> typeParsers;
   int depth = 0;
+  int parserVersion = 2;
 
-  parse(String string, { Map<String, Function> typeParsers = const {}, bool parseTypes = true }) {
+  parse(String string,
+      {Map<String, Function> typeParsers = const {}, bool parseTypes = true}) {
     this.tokenizer = KdlTokenizer(string);
+    _checkVersion();
 
     if (parseTypes) {
-      this.typeParsers = { ...KdlTypes.MAPPING, ...typeParsers };
+      this.typeParsers = {...KdlTypes.MAPPING, ...typeParsers};
     } else {
       this.typeParsers = {};
     }
 
     return _document();
+  }
+
+  _checkVersion() {
+    var docVersion = tokenizer.versionDirective();
+    if (docVersion == null) return;
+    if (docVersion != parserVersion) {
+      throw "Version mismatch, document specified v${docVersion}, but this is a v${parserVersion} parser";
+    }
   }
 
   _document() {
@@ -40,8 +51,8 @@ class KdlParser {
 
     var commented = false;
     if (tokenizer.peekToken()[0] == KdlToken.SLASHDASH) {
-      tokenizer.nextToken();
-      _wsStar();
+      // print('node slashdashing...');
+      _slashdash();
       commented = true;
     }
 
@@ -54,17 +65,8 @@ class KdlParser {
       return false;
     }
 
-    switch (tokenizer.peekToken()[0]) {
-      case KdlToken.WS:
-      case KdlToken.LBRACE:
-        _argsPropsChildren(node);
-        break;
-      case KdlToken.SEMICOLON:
-        tokenizer.nextToken();
-        break;
-      case KdlToken.LPAREN:
-        throw "Unexpected (";
-    }
+    _argsPropsChildren(node);
+    // print("done with argsPropsChildren for ${node.name}");
 
     if (commented) return null;
 
@@ -76,7 +78,9 @@ class KdlParser {
 
   _identifier() {
     var t = tokenizer.peekToken();
-    if (t[0] == KdlToken.IDENT || t[0] == KdlToken.STRING || t[0] == KdlToken.RAWSTRING) {
+    if (t[0] == KdlToken.IDENT ||
+        t[0] == KdlToken.STRING ||
+        t[0] == KdlToken.RAWSTRING) {
       tokenizer.nextToken();
       return t[1];
     }
@@ -103,70 +107,85 @@ class KdlParser {
 
   _argsPropsChildren(KdlNode node) {
     var commented = false;
+    var hasChildren = false;
     while (true) {
-      _wsStar();
-      switch (tokenizer.peekToken()[0]) {
-      case KdlToken.IDENT:
-        var t = tokenizer.peekTokenAfterNext();
-        if (t[0] == KdlToken.EQUALS) {
-          var p = _prop();
-          if (!commented) {
-            node.properties[p[0]] = p[1];
+      var peek = tokenizer.peekToken()[0];
+      switch (peek) {
+        case KdlToken.WS:
+          _wsStar();
+          peek = tokenizer.peekToken()[0];
+          if (peek == KdlToken.SLASHDASH) {
+            // print('slashdashing...');
+            _slashdash();
+            peek = tokenizer.peekToken()[0];
+            commented = true;
           }
-        } else {
-          var v = _value();
-          if (!commented) {
-            node.arguments.add(v);
+          switch (peek) {
+            case KdlToken.STRING:
+            case KdlToken.IDENT:
+              if (hasChildren) throw "Unexpected ${peek}";
+              var t = tokenizer.peekTokenAfterNext();
+              if (t[0] == KdlToken.EQUALS) {
+                var p = _prop();
+                if (!commented) node.properties[p[0]] = p[1];
+              } else {
+                var v = _value();
+                if (!commented) node.arguments.add(v);
+              }
+              commented = false;
+              break;
+            case KdlToken.NEWLINE:
+            case KdlToken.EOF:
+            case KdlToken.SEMICOLON:
+              tokenizer.nextToken();
+              return;
+            case KdlToken.LBRACE:
+              _lbrace(node, commented);
+              hasChildren = true;
+              commented = false;
+              break;
+            case KdlToken.RBRACE:
+              _rbrace();
+              return;
+            default:
+              var v = _value();
+              if (hasChildren) throw "Unexpected ${peek}";
+              if (!commented) node.arguments.add(v);
+              commented = false;
+              break;
           }
-        }
-        commented = false;
-        break;
-      case KdlToken.LBRACE:
-        this.depth += 1;
-        var children = _children();
-        if (!commented) {
-          node.children = children;
-        }
-        _expectNodeTerm();
-        return;
-      case KdlToken.RBRACE:
-        if (this.depth == 0) throw "Unexpected }";
-        this.depth -= 1;
-        return;
-      case KdlToken.SLASHDASH:
-        commented = true;
-        tokenizer.nextToken();
-        _wsStar();
-        break;
-      case KdlToken.NEWLINE:
-      case KdlToken.EOF:
-      case KdlToken.SEMICOLON:
-        tokenizer.nextToken();
-        return;
-      case KdlToken.STRING:
-        var t = tokenizer.peekTokenAfterNext();
-        if (t[0] == KdlToken.EQUALS) {
-          var p = _prop();
-          if (!commented) {
-            node.properties[p[0]] = p[1];
-          }
-        } else {
-          var v = _value();
-          if (!commented) {
-            node.arguments.add(v);
-          }
-        }
-        commented = false;
-        break;
-      default:
-        var v = _value();
-        if (!commented) {
-          node.arguments.add(v);
-        }
-        commented = false;
-        break;
+          break;
+        case KdlToken.EOF:
+        case KdlToken.SEMICOLON:
+        case KdlToken.NEWLINE:
+          tokenizer.nextToken();
+          return;
+        case KdlToken.LBRACE:
+          _lbrace(node, commented);
+          hasChildren = true;
+          commented = false;
+          break;
+        case KdlToken.RBRACE:
+          _rbrace();
+          return;
+        default:
+          throw "Unexpected ${peek}";
       }
     }
+  }
+
+  _lbrace(KdlNode node, bool commented) {
+    if (!commented && node.hasChildren) throw "Unexpected {";
+    depth += 1;
+    var children = _children();
+    depth -= 1;
+    if (!commented) {
+      node.children = children;
+    }
+  }
+
+  _rbrace() {
+    if (depth == 0) throw "Unexpected }";
   }
 
   _prop() {
@@ -226,6 +245,21 @@ class KdlParser {
     _expect(KdlToken.RPAREN);
     _wsStar();
     return type;
+  }
+
+  _slashdash() {
+    var t = tokenizer.nextToken()[0];
+    if (t != KdlToken.SLASHDASH) {
+      throw "Expected SLASHDASH, found ${t}";
+    }
+    _linespaceStar();
+    var peek = tokenizer.peekToken()[0];
+    switch (peek) {
+      case KdlToken.RBRACE:
+      case KdlToken.EOF:
+      case KdlToken.SEMICOLON:
+        throw "Unexpected ${peek} after SLASHDASH";
+    }
   }
 
   _expect(KdlToken type) {

@@ -56,7 +56,7 @@ main() {
   };
 
   test('ci', () async {
-    var string = await new File('./example/ci.kdl').readAsString();
+    var string = await new File('./test/kdl-org/examples/ci.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
       _("name", "CI");
@@ -108,7 +108,7 @@ main() {
   });
 
   test('cargo', () async {
-    var string = await new File('./example/Cargo.kdl').readAsString();
+    var string = await new File('./test/kdl-org/examples/Cargo.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
     var expectedDoc = nodes(() {
       _("package", () {
@@ -129,11 +129,22 @@ main() {
   });
 
   test('nuget', () async {
-    var string = await new File('./example/nuget.kdl').readAsString();
+    var string = await new File('./test/kdl-org/examples/nuget.kdl').readAsString();
     var doc = Kdl.parseDocument(string);
 
-    // This file is particularly large. It would be nice to validate it, but for now
-    // I'm just going to settle for making sure it parses.
+    expect(doc, isNotNull);
+  });
+
+  test('kdl-schema', () async {
+    var string = await new File('./test/kdl-org/examples/kdl-schema.kdl').readAsString();
+    var doc = Kdl.parseDocument(string);
+
+    expect(doc, isNotNull);
+  });
+
+  test('website', () async {
+    var string = await new File('./test/kdl-org/examples/website.kdl').readAsString();
+    var doc = Kdl.parseDocument(string);
 
     expect(doc, isNotNull);
   });

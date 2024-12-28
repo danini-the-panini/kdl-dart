@@ -30,10 +30,10 @@ class KdlDocument with IterableMixin<KdlNode> {
 
   dashVals(key) {
     return this[key]
-      .children
-      .where((node) => node.name == "-")
-      .map((node) => node.arguments.first)
-      .map((arg) => arg.value);
+        .children
+        .where((node) => node.name == "-")
+        .map((node) => node.arguments.first)
+        .map((arg) => arg.value);
   }
 
   KdlNode operator [](key) {
@@ -47,11 +47,12 @@ class KdlDocument with IterableMixin<KdlNode> {
   }
 
   @override
-  bool operator ==(other) => other is KdlDocument && _sameNodes(nodes, other.nodes);
+  bool operator ==(other) =>
+      other is KdlDocument && _sameNodes(nodes, other.nodes);
 
   @override
   int get hashCode => nodes.hashCode;
-  
+
   @override
   Iterator<KdlNode> get iterator => nodes.iterator;
 
@@ -68,17 +69,20 @@ class KdlNode with IterableMixin<KdlNode> {
   List<KdlValue> arguments = [];
   Map<String, KdlValue> properties = {};
 
-  KdlNode(String name, {
-    List<KdlNode>? children = null,
-    List<KdlValue>? arguments = null,
-    Map<String, KdlValue>? properties = null,
-    String? type = null
-  }) {
+  KdlNode(String name,
+      {List<KdlNode>? children = null,
+      List<KdlValue>? arguments = null,
+      Map<String, KdlValue>? properties = null,
+      String? type = null}) {
     this.name = name;
     this.children = children ?? [];
     this.arguments = arguments ?? [];
     this.properties = properties ?? {};
     this.type = type;
+  }
+
+  bool get hasChildren {
+    return this.children.isNotEmpty;
   }
 
   KdlNode child(key) {
@@ -101,10 +105,10 @@ class KdlNode with IterableMixin<KdlNode> {
 
   dashVals(key) {
     return child(key)
-      .children
-      .where((node) => node.name == "-")
-      .map((node) => node.arguments.first)
-      .map((arg) => arg.value);
+        .children
+        .where((node) => node.name == "-")
+        .map((node) => node.arguments.first)
+        .map((arg) => arg.value);
   }
 
   operator [](key) {
@@ -118,15 +122,16 @@ class KdlNode with IterableMixin<KdlNode> {
   }
 
   @override
-  bool operator ==(other) => other is KdlNode
-    && name == other.name
-    && _sameNodes(this.children, other.children)
-    && _sameArguments(other.arguments)
-    && _sameProperties(other.properties);
+  bool operator ==(other) =>
+      other is KdlNode &&
+      name == other.name &&
+      _sameNodes(children, other.children) &&
+      _sameArguments(other.arguments) &&
+      _sameProperties(other.properties);
 
   @override
   int get hashCode => [children, arguments, properties].hashCode;
-  
+
   @override
   Iterator<KdlNode> get iterator => children.iterator;
 
@@ -143,7 +148,7 @@ class KdlNode with IterableMixin<KdlNode> {
 
     var result = parser(this, type);
 
-    if (result == null) return this.asType(type);
+    if (result == null) return asType(type);
 
     if (!(result is KdlNode)) {
       throw "expected parser to return an instance of KdlNode, got ${result.runtimeType}";
@@ -160,10 +165,13 @@ class KdlNode with IterableMixin<KdlNode> {
       s += " ${arguments.map((a) => a.toString()).join(' ')}";
     }
     if (properties.isNotEmpty) {
-      s += " ${properties.entries.map((e) => "${_idToString(e.key)}=${e.value}").join(' ')}";
+      s +=
+          " ${properties.entries.map((e) => "${_idToString(e.key)}=${e.value}").join(' ')}";
     }
     if (children.isNotEmpty) {
-      var childrenStr = children.map((e) => e._toStringWithIndentation(indentation + 1)).join("\n");
+      var childrenStr = children
+          .map((e) => e._toStringWithIndentation(indentation + 1))
+          .join("\n");
       s += " {\n${childrenStr}\n${indent}}";
     }
     return s;
@@ -182,7 +190,8 @@ class KdlNode with IterableMixin<KdlNode> {
   _sameProperties(Map<String, KdlValue> otherProps) {
     if (properties.length != otherProps.length) return false;
 
-    return properties.entries.every((element) => otherProps[element.key] == element.value);
+    return properties.entries
+        .every((element) => otherProps[element.key] == element.value);
   }
 
   _idToString(String id) {
@@ -194,10 +203,7 @@ abstract class KdlValue<T> {
   late T value;
   String? type = null;
 
-  KdlValue(this.value, [this.type]) {
-    this.value = value;
-    this.type = type;
-  }
+  KdlValue(this.value, [this.type]);
 
   static KdlValue from(v, [String? type]) {
     if (v is String) return KdlString(v, type);
@@ -211,9 +217,9 @@ abstract class KdlValue<T> {
 
   @override
   bool operator ==(other) {
-    if (other is KdlValue) return this.value == other.value;
+    if (other is KdlValue) return value == other.value;
 
-    return this.value == other;
+    return value == other;
   }
 
   @override
@@ -260,13 +266,14 @@ class KdlString extends KdlValue<String> {
 
 class KdlBigDecimal extends KdlValue<BigDecimal> {
   KdlBigDecimal(BigDecimal value, [String? type]) : super(value, type);
-  KdlBigDecimal.from(num value, [String? type]) : super(BigDecimal.parse(value.toString()), type);
+  KdlBigDecimal.from(num value, [String? type])
+      : super(BigDecimal.parse(value.toString()), type);
 
   @override
   bool operator ==(other) {
-    if (other is KdlBigDecimal) return this.value == other.value;
-    if (other is KdlDouble) return this.value == other.value;
-    return this.value == other;
+    if (other is KdlBigDecimal) return value == other.value;
+    if (other is KdlDouble) return value == other.value;
+    return value == other;
   }
 
   @override
@@ -284,10 +291,10 @@ class KdlDouble extends KdlValue<double> {
   @override
   bool operator ==(other) {
     if (other is KdlDouble) return this == other.value;
-    if (other is KdlBigDecimal) return this.value == other.value;
+    if (other is KdlBigDecimal) return value == other.value;
 
-    if (this.value.isNaN && other is double && other.isNaN) return true;
-    return this.value == other;
+    if (value.isNaN && other is double && other.isNaN) return true;
+    return value == other;
   }
 
   @override
@@ -307,7 +314,7 @@ class KdlInt<I> extends KdlValue<I> {
   KdlInt(I value, [String? type]) : super(value, type);
 
   @override
-  bool operator ==(other) => other is KdlInt && this.value == other.value;
+  bool operator ==(other) => other is KdlInt && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -317,7 +324,7 @@ class KdlBool extends KdlValue<bool> {
   KdlBool(bool value, [String? type]) : super(value, type);
 
   @override
-  bool operator ==(other) => other is KdlBool && this.value == other.value;
+  bool operator ==(other) => other is KdlBool && value == other.value;
 
   @override
   int get hashCode => value.hashCode;
