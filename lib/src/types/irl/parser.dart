@@ -23,8 +23,11 @@ class IRL {
   String? unicodeHash;
 
   /// Construct a new IRL
-  IRL(this.asciiValue, this.unicodeValue, [this.unicodeDomain, this.unicodePath,
-      this.unicodeSearch, this.unicodeHash]);
+  IRL(this.asciiValue, this.unicodeValue,
+      [this.unicodeDomain,
+      this.unicodePath,
+      this.unicodeSearch,
+      this.unicodeHash]);
 }
 
 /// Parses a string into an IRL

@@ -47,21 +47,16 @@ class KdlIDNEmail extends KdlEmail {
   }
 }
 
-enum _EmailParserContext {
-  start,
-  afterDot,
-  afterPart,
-  afterAt,
-  afterDomain
-}
+enum _EmailParserContext { start, afterDot, afterPart, afterAt, afterDomain }
 
 class _EmailParser {
   final String _string;
   final bool _idn;
   final _EmailTokenizer _tokenizer;
 
-  _EmailParser(this._string, {bool idn = false}) : _idn = idn,
-    _tokenizer = _EmailTokenizer(_string, idn: idn);
+  _EmailParser(this._string, {bool idn = false})
+      : _idn = idn,
+        _tokenizer = _EmailTokenizer(_string, idn: idn);
 
   List<String> parse() {
     String local = '';
@@ -106,7 +101,9 @@ class _EmailParser {
         case _EmailTokenType.domain:
           switch (context) {
             case _EmailParserContext.afterAt:
-              var validator = _idn ? IDNHostnameValidator(token.value) : HostnameValidator(token.value);
+              var validator = _idn
+                  ? IDNHostnameValidator(token.value)
+                  : HostnameValidator(token.value);
               if (!validator.isValid()) throw "invalid hostname ${token.value}";
 
               unicodeDomain = validator.unicode;
@@ -169,7 +166,8 @@ class _EmailTokenizer {
   _EmailTokenizer(this._string, {bool idn = false}) : _idn = idn;
 
   String _substring(int start, [int? end]) {
-    return String.fromCharCodes(_string.runes.toList().sublist(start, end ?? _length(_string)));
+    return String.fromCharCodes(
+        _string.runes.toList().sublist(start, end ?? _length(_string)));
   }
 
   int _length(String str) {
@@ -189,57 +187,58 @@ class _EmailTokenizer {
     var context = _EmailTokenizerContext.start;
     var buffer = '';
     while (true) {
-      if (_index >= _length(_string)) return _EmailToken(_EmailTokenType.end, '');
+      if (_index >= _length(_string))
+        return _EmailToken(_EmailTokenType.end, '');
       var c = _charAt(_index);
 
       switch (context) {
-      case _EmailTokenizerContext.start:
-        switch (c) {
-        case '.':
-          _index++;
-          return _EmailToken(_EmailTokenType.dot, '.');
-        case '@':
-          _afterAt = true;
-          _index++;
-          return _EmailToken(_EmailTokenType.at, '@');
-        case '"':
-          context = _EmailTokenizerContext.quote;
-          _index++;
+        case _EmailTokenizerContext.start:
+          switch (c) {
+            case '.':
+              _index++;
+              return _EmailToken(_EmailTokenType.dot, '.');
+            case '@':
+              _afterAt = true;
+              _index++;
+              return _EmailToken(_EmailTokenType.at, '@');
+            case '"':
+              context = _EmailTokenizerContext.quote;
+              _index++;
+              break;
+            default:
+              if (_localPartChars().hasMatch(c)) {
+                context = _EmailTokenizerContext.emailPart;
+                buffer += c;
+                _index++;
+                break;
+              }
+              throw "invalid email $_string, (unexpected $c)";
+          }
           break;
-        default:
+        case _EmailTokenizerContext.emailPart:
           if (_localPartChars().hasMatch(c)) {
-            context = _EmailTokenizerContext.emailPart;
             buffer += c;
             _index++;
-            break;
-          }
-          throw "invalid email $_string, (unexpected $c)";
-        }
-        break;
-      case _EmailTokenizerContext.emailPart:
-        if (_localPartChars().hasMatch(c)) {
-          buffer += c;
-          _index++;
-        } else if (c == '.' || c == '@') {
-          return _EmailToken(_EmailTokenType.emailPart, buffer);
-        } else {
-          throw "invalid email $_string (unexpected $c)";
-        }
-        break;
-      case _EmailTokenizerContext.quote:
-        if (c == '"') {
-          var n = _charAt(_index + 1);
-          if (n != '.' && n != '@') {
+          } else if (c == '.' || c == '@') {
+            return _EmailToken(_EmailTokenType.emailPart, buffer);
+          } else {
             throw "invalid email $_string (unexpected $c)";
           }
+          break;
+        case _EmailTokenizerContext.quote:
+          if (c == '"') {
+            var n = _charAt(_index + 1);
+            if (n != '.' && n != '@') {
+              throw "invalid email $_string (unexpected $c)";
+            }
 
-          _index++;
-          return _EmailToken(_EmailTokenType.emailPart, buffer);
-        } else {
-          buffer += c;
-          _index += 1;
-        }
-        break;
+            _index++;
+            return _EmailToken(_EmailTokenType.emailPart, buffer);
+          } else {
+            buffer += c;
+            _index += 1;
+          }
+          break;
       }
     }
   }

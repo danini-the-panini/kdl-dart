@@ -53,7 +53,8 @@ class KdlIRLReference extends KdlIRL {
   KdlIRLReference._from(super.value, [super.type]) : super._from();
 
   /// Converts a `KdlString` into a `KdlIRLReference`
-  static KdlIRLReference? call(KdlValue value, [String type = 'irl-reference']) {
+  static KdlIRLReference? call(KdlValue value,
+      [String type = 'irl-reference']) {
     if (value is! KdlString) return null;
 
     var irl = IRLParser(value.value).parse();

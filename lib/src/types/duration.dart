@@ -5,16 +5,22 @@ import "./duration/iso8601_parser.dart";
 class ISODuration {
   /// Number of years
   num years;
+
   /// Number of months
   num months;
+
   /// Number of weeks
   num weeks;
+
   /// Number of days
   num days;
+
   /// Nubmer of hours
   num hours;
+
   /// Number of minutes
   num minutes;
+
   /// Number of seconds
   num seconds;
 

@@ -14,5 +14,3 @@ pubspec.lock
 *.js_
 *.js.deps
 *.js.map
-
-.vscode

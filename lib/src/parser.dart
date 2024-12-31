@@ -311,52 +311,52 @@ class KdlV1Parser extends KdlParser {
     while (true) {
       _wsStar();
       switch (_tokenizer.peekToken().type) {
-      case KdlTerm.ident:
-        var p = _prop();
-        if (!commented) {
-          node.properties[p.$1] = p.$2;
-        }
-        commented = false;
-        break;
-      case KdlTerm.lbrace:
-        var childNodes = _children();
-        if (!commented) {
-          node.children = childNodes;
-        }
-        _expectNodeTerm();
-        return;
-      case KdlTerm.slashdash:
-        commented = true;
-        _tokenizer.nextToken();
-        _wsStar();
-        break;
-      case KdlTerm.newline:
-      case KdlTerm.eof:
-      case KdlTerm.semicolon:
-        _tokenizer.nextToken();
-        return;
-      case KdlTerm.string:
-        var t = _tokenizer.peekTokenAfterNext();
-        if (t.type == KdlTerm.equals) {
+        case KdlTerm.ident:
           var p = _prop();
           if (!commented) {
             node.properties[p.$1] = p.$2;
           }
-        } else {
+          commented = false;
+          break;
+        case KdlTerm.lbrace:
+          var childNodes = _children();
+          if (!commented) {
+            node.children = childNodes;
+          }
+          _expectNodeTerm();
+          return;
+        case KdlTerm.slashdash:
+          commented = true;
+          _tokenizer.nextToken();
+          _wsStar();
+          break;
+        case KdlTerm.newline:
+        case KdlTerm.eof:
+        case KdlTerm.semicolon:
+          _tokenizer.nextToken();
+          return;
+        case KdlTerm.string:
+          var t = _tokenizer.peekTokenAfterNext();
+          if (t.type == KdlTerm.equals) {
+            var p = _prop();
+            if (!commented) {
+              node.properties[p.$1] = p.$2;
+            }
+          } else {
+            var v = _value();
+            if (!commented) {
+              node.arguments.add(v);
+            }
+          }
+          commented = false;
+          break;
+        default:
           var v = _value();
           if (!commented) {
             node.arguments.add(v);
           }
-        }
-        commented = false;
-        break;
-      default:
-        var v = _value();
-        if (!commented) {
-          node.arguments.add(v);
-        }
-        commented = false;
-        break;
+          commented = false;
+          break;
       }
     }
   }

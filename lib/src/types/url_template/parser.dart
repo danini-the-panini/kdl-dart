@@ -61,18 +61,35 @@ class URLTemplateParser {
               buffer = '';
               var n = _index < _string.length - 1 ? _string[_index + 1] : null;
               switch (n) {
-                case '+': expansion = _ReservedExpansion(); break;
-                case '#': expansion = _FragmentExpansion(); break;
-                case '.': expansion = _LabelExpansion(); break;
-                case '/': expansion = _PathExpansion(); break;
-                case ';': expansion = _ParameterExpansion(); break;
-                case '?': expansion = _QueryExpansion(); break;
-                case '&': expansion = _QueryContinuation(); break;
-                default: expansion = _StringExpansion(); break;
+                case '+':
+                  expansion = _ReservedExpansion();
+                  break;
+                case '#':
+                  expansion = _FragmentExpansion();
+                  break;
+                case '.':
+                  expansion = _LabelExpansion();
+                  break;
+                case '/':
+                  expansion = _PathExpansion();
+                  break;
+                case ';':
+                  expansion = _ParameterExpansion();
+                  break;
+                case '?':
+                  expansion = _QueryExpansion();
+                  break;
+                case '&':
+                  expansion = _QueryContinuation();
+                  break;
+                default:
+                  expansion = _StringExpansion();
+                  break;
               }
               _index += (expansion.runtimeType == _StringExpansion) ? 1 : 2;
               break;
-            case null: return null;
+            case null:
+              return null;
             default:
               buffer = c;
               _index++;
@@ -82,7 +99,9 @@ class URLTemplateParser {
           break;
         case _URLTemplateParserContext.literal:
           switch (c) {
-            case '{': case null: return _StringLiteral(buffer);
+            case '{':
+            case null:
+              return _StringLiteral(buffer);
             default:
               buffer += c;
               _index++;
@@ -147,13 +166,12 @@ class _URLTemplateVariable {
   bool withName;
   bool keepEmpties;
 
-  _URLTemplateVariable(this.name, {
-    this.limit,
-    this.explode = false,
-    this.allowReserved = false,
-    this.withName = false,
-    this.keepEmpties = false
-  });
+  _URLTemplateVariable(this.name,
+      {this.limit,
+      this.explode = false,
+      this.allowReserved = false,
+      this.withName = false,
+      this.keepEmpties = false});
 
   expand(value) {
     if (explode) {
@@ -210,7 +228,8 @@ class _URLTemplateVariable {
     var result = '';
     for (int i = 0; i < string.length; i++) {
       var c = string[i];
-      if (URLTemplateParser._unreserved.hasMatch(c) || (allowReserved && URLTemplateParser._reserved.hasMatch(c))) {
+      if (URLTemplateParser._unreserved.hasMatch(c) ||
+          (allowReserved && URLTemplateParser._reserved.hasMatch(c))) {
         result += c;
       } else {
         result += IRLParser.percentEncode(c);
@@ -357,7 +376,8 @@ class _QueryExpansion extends _StringExpansion {
 }
 
 class _QueryContinuation extends _QueryExpansion {
-  @override get _prefix => '&';
+  @override
+  get _prefix => '&';
 
   @override
   String toString() => "{&${_variables.join(',')}}";

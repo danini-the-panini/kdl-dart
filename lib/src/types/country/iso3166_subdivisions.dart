@@ -159,9 +159,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "AU-ACT": "Australian Capital Territory",
     "AU-NT": "Northern Territory"
   },
-  "AZ": {
-    "AZ-NX": "Naxçıvan"
-  },
+  "AZ": {"AZ-NX": "Naxçıvan"},
   "BA": {
     "BA-BIH": "Federacija Bosne i Hercegovine",
     "BA-SRP": "Republika Srpska",
@@ -297,11 +295,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "BO-S": "Santa Cruz",
     "BO-T": "Tarija"
   },
-  "BQ": {
-    "BQ-BO": "Bonaire",
-    "BQ-SA": "Saba",
-    "BQ-SE": "Sint Eustatius"
-  },
+  "BQ": {"BQ-BO": "Bonaire", "BQ-SA": "Saba", "BQ-SE": "Sint Eustatius"},
   "BR": {
     "BR-AC": "Acre",
     "BR-AL": "Alagoas",
@@ -670,10 +664,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "CU-05": "Villa Clara",
     "CU-99": "Isla de la Juventud"
   },
-  "CV": {
-    "CV-B": "Ilhas de Barlavento",
-    "CV-S": "Ilhas de Sotavento"
-  },
+  "CV": {"CV-B": "Ilhas de Barlavento", "CV-S": "Ilhas de Sotavento"},
   "CY": {
     "CY-04": "Ammochostos",
     "CY-06": "Keryneia",
@@ -1056,10 +1047,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "GN-N": "Nzérékoré",
     "GN-C": "Conakry"
   },
-  "GQ": {
-    "GQ-C": "Región Continental",
-    "GQ-I": "Región Insular"
-  },
+  "GQ": {"GQ-C": "Región Continental", "GQ-I": "Región Insular"},
   "GR": {
     "GR-A": "Anatolikí Makedonía kai Thráki",
     "GR-I": "Attikí",
@@ -1099,11 +1087,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "GT-TO": "Totonicapán",
     "GT-ZA": "Zacapa"
   },
-  "GW": {
-    "GW-L": "Leste",
-    "GW-N": "Norte",
-    "GW-S": "Sul"
-  },
+  "GW": {"GW-L": "Leste", "GW-N": "Norte", "GW-S": "Sul"},
   "GY": {
     "GY-BA": "Barima-Waini",
     "GY-CU": "Cuyuni-Mazaruni",
@@ -1529,15 +1513,8 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "KI-L": "Line Islands",
     "KI-P": "Phoenix Islands"
   },
-  "KM": {
-    "KM-G": "Grande Comore",
-    "KM-A": "Anjouan",
-    "KM-M": "Mohéli"
-  },
-  "KN": {
-    "KN-K": "Saint Kitts",
-    "KN-N": "Nevis"
-  },
+  "KM": {"KM-G": "Grande Comore", "KM-A": "Anjouan", "KM-M": "Mohéli"},
+  "KN": {"KN-K": "Saint Kitts", "KN-N": "Nevis"},
   "KP": {
     "KP-01": "Pyongyang",
     "KP-13": "Rason",
@@ -1970,10 +1947,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "MG-A": "Toamasina",
     "MG-U": "Toliara"
   },
-  "MH": {
-    "MH-L": "Ralik chain",
-    "MH-T": "Ratak chain"
-  },
+  "MH": {"MH-L": "Ralik chain", "MH-T": "Ratak chain"},
   "MK": {
     "MK-801": "Aerodrom",
     "MK-802": "Aračinovo",
@@ -2208,10 +2182,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "MU-RR": "Rivière du Rempart",
     "MU-SA": "Savanne"
   },
-  "MV": {
-    "MV-01": "Addu City",
-    "MV-MLE": "Male"
-  },
+  "MV": {"MV-01": "Addu City", "MV-MLE": "Male"},
   "MW": {
     "MW-C": "Central Region",
     "MW-N": "Northern Region",
@@ -2387,7 +2358,8 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "NO-18": "Nordland",
     "NO-03": "Oslo",
     "NO-11": "Rogaland",
-    "NO-54": "Troms og Finnmark / Romsa ja Finnmárku (se) / Tromssan ja Finmarkun (-)",
+    "NO-54":
+        "Troms og Finnmark / Romsa ja Finnmárku (se) / Tromssan ja Finmarkun (-)",
     "NO-50": "Trøndelag / Trööndelage (-)",
     "NO-38": "Vestfold og Telemark",
     "NO-46": "Vestland",
@@ -2694,10 +2666,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "RO-VN": "Vrancea",
     "RO-B": "București"
   },
-  "RS": {
-    "RS-KM": "Kosovo-Metohija[a]",
-    "RS-VO": "Vojvodina"
-  },
+  "RS": {"RS-KM": "Kosovo-Metohija[a]", "RS-VO": "Vojvodina"},
   "RU": {
     "RU-AD": "Adygeya, Respublika",
     "RU-AL": "Altay, Respublika",
@@ -2716,7 +2685,8 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "RU-ME": "Mariy El, Respublika",
     "RU-MO": "Mordoviya, Respublika",
     "RU-SA": "Saha, Respublika(local variant is Jakutija)",
-    "RU-SE": "Severnaya Osetiya, Respublika(local variant is Alaniya [Respublika Severnaya Osetiya – Alaniya])",
+    "RU-SE":
+        "Severnaya Osetiya, Respublika(local variant is Alaniya [Respublika Severnaya Osetiya – Alaniya])",
     "RU-TA": "Tatarstan, Respublika",
     "RU-TY": "Tyva, Respublika(local variant is Tuva)",
     "RU-UD": "Udmurtskaya Respublika",
@@ -3842,11 +3812,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "VU-TAE": "Taféa",
     "VU-TOB": "Torba"
   },
-  "WF": {
-    "WF-AL": "Alo",
-    "WF-SG": "Sigave",
-    "WF-UV": "Uvea"
-  },
+  "WF": {"WF-AL": "Alo", "WF-SG": "Sigave", "WF-UV": "Uvea"},
   "WS": {
     "WS-AA": "A'ana",
     "WS-AL": "Aiga-i-le-Tai",
@@ -3894,7 +3860,7 @@ const Map<String, Map<String, String>> countrySubdivisions = {
     "ZA-NC": "Northern Cape",
     "ZA-NW": "North-West",
     "ZA-WC": "Western Cape"
-},
+  },
   "ZM": {
     "ZM-02": "Central",
     "ZM-08": "Copperbelt",

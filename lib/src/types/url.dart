@@ -6,7 +6,8 @@ class KdlURLReference extends KdlValue<Uri> {
   KdlURLReference(super.value, [super.type]);
 
   /// Converts a `KdlString` into a `KdlURLReference`
-  static KdlURLReference? call(KdlValue value, [String type = 'url-reference']) {
+  static KdlURLReference? call(KdlValue value,
+      [String type = 'url-reference']) {
     if (value is! KdlString) return null;
 
     return KdlURLReference(Uri.parse(value.value), type);
