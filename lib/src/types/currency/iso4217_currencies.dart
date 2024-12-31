@@ -1,8 +1,15 @@
+/// Represents a currency
 class Currency {
+  /// Numeric currenct code
   int numericCode;
+
+  /// Minor unit decimal places
   int? minorUnit;
+
+  /// Name of the currency
   String name;
 
+  /// Construct a new instance of `Currency`
   Currency({this.numericCode = 0, this.minorUnit, this.name = ''});
 
   @override
@@ -19,6 +26,7 @@ class Currency {
   String toString() =>
       "numericCode:$numericCode minorUnit:$minorUnit name:$name";
 
+  /// Mapping of currencies by their alpha-3 currency code
   static Map<String, Currency> currencies = {
     'AED': Currency(
         numericCode: 784, minorUnit: 2, name: 'United Arab Emirates dirham'),

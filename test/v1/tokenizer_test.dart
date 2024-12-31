@@ -2,7 +2,6 @@ import 'package:test/test.dart';
 import 'package:big_decimal/big_decimal.dart';
 
 import 'package:kdl/src/tokenizer.dart';
-import 'package:kdl/src/v1/tokenizer.dart';
 
 void main() {
   test('peek and peek after next', () {

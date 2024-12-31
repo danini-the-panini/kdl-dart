@@ -1,4 +1,5 @@
-// From: https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes
+/// Mapping of country subdivisions by alpha-2 code
+/// From: https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes
 const Map<String, Map<String, String>> countrySubdivisions = {
   "AD": {
     "AD-07": "Andorra la Vella",

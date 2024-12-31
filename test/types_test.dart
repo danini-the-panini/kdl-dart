@@ -96,13 +96,13 @@ node (date-time)"2021-01-01T12:12:12" \\
   });
 
   test('custom types', () {
-    var parsers = {
-      'foo': (value, type) {
-        if (value is! KdlValue) return null;
+    var customValues = {
+      'foo': (KdlValue value, String type) {
         return Foo(value.value, type);
-      },
-      'bar': (node, type) {
-        if (node is! KdlNode) return null;
+      }
+    };
+    var customNodes = {
+      'bar': (KdlNode node, type) {
         return Bar(node, type);
       },
     };
@@ -112,7 +112,8 @@ node (date-time)"2021-01-01T12:12:12" \\
 (foo)foonode (bar)"barvalue"
 """
             .trim(),
-        typeParsers: parsers);
+        valueTypes: customValues,
+        nodeTypes: customNodes);
 
     expect(doc, isNotNull);
     expect(doc.nodes[0], isA<Bar>());

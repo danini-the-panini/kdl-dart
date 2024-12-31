@@ -1,19 +1,25 @@
 import "../document.dart";
 
+/// ISO8601 date/time format.
 class KdlDateTime extends KdlValue<DateTime> {
+  /// Construct a new `KdlDateTime`
   KdlDateTime(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'date-time']) {
+  /// Convert a `KdlString` into a `KdlDateTime`
+  static KdlDateTime? call(KdlValue value, [String type = 'date-time']) {
     if (value is! KdlString) return null;
 
     return KdlDateTime(DateTime.parse(value.value), type);
   }
 }
 
+/// "Time" section of ISO8601.
 class KdlTime extends KdlDateTime {
+  /// Construct a new `KdlTime`
   KdlTime(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'time']) {
+  /// Convert a `KdlString` into a `KdlTime`
+  static KdlTime? call(KdlValue value, [String type = 'time']) {
     if (value is! KdlString) return null;
 
     var time = value.value;
@@ -24,10 +30,13 @@ class KdlTime extends KdlDateTime {
   }
 }
 
+/// "Date" section of ISO8601.
 class KdlDate extends KdlDateTime {
+  /// Construct a new `KdlDate`
   KdlDate(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'date']) {
+  /// Convert a `KdlString` into a `KdlDate`
+  static KdlDate? call(KdlValue value, [String type = 'date']) {
     if (value is! KdlString) return null;
 
     return KdlDate(DateTime.parse(value.value), type);

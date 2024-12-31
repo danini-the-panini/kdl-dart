@@ -2,99 +2,104 @@ import "dart:math";
 
 import "../irl/parser.dart";
 
+/// RFC6570 URI Template.
 class URLTemplate {
-  List<URLTemplatePart> parts;
+  final List<_URLTemplatePart> _parts;
 
-  URLTemplate(this.parts);
+  /// Construct a new URL template with the given parts
+  URLTemplate(this._parts);
 
-  expand(values) {
-    var result = parts.map((part) => part.expand(values)).join();
-    var parser = IRLReferenceParser(result);
-    var uri = parser.parse()[0];
-    return Uri.parse(uri);
+  /// Expand the template into a Uri with the given values
+  Uri expand(values) {
+    var result = _parts.map((p) => p._expand(values)).join();
+    var parser = IRLParser(result);
+    return Uri.parse(parser.parse().asciiValue);
   }
 
   @override
-  String toString() => parts.map((part) => part.toString()).join();
+  String toString() => _parts.map((p) => p.toString()).join();
 }
 
-enum URLTemplateParserContext {
+enum _URLTemplateParserContext {
   start,
   literal,
   expansion,
 }
 
+/// Parses a string into a URLTemplate
 class URLTemplateParser {
-  static final unreserved = RegExp(r"[a-zA-Z0-9\-._~]");
-  static final reserved = RegExp(r"[:/?#\[\]@!$&'()*+,;=]");
+  static final _unreserved = RegExp(r"[a-zA-Z0-9\-._~]");
+  static final _reserved = RegExp(r"[:/?#\[\]@!$&'()*+,;=]");
 
-  String string;
-  int index = 0;
+  final String _string;
+  int _index = 0;
 
-  URLTemplateParser(this.string);
+  /// Construct a new URL template parser for parsing the given string
+  URLTemplateParser(this._string);
 
+  /// Parse the string into a URL template
   URLTemplate parse() {
-    List<URLTemplatePart> result = [];
-    URLTemplatePart? token;
+    List<_URLTemplatePart> result = [];
+    _URLTemplatePart? token;
     while ((token = _nextToken()) != null) {
       result.add(token!);
     }
     return URLTemplate(result);
   }
 
-  URLTemplatePart? _nextToken() {
+  _URLTemplatePart? _nextToken() {
     var buffer = '';
-    var context = URLTemplateParserContext.start;
-    late URLTemplatePart expansion;
+    var context = _URLTemplateParserContext.start;
+    late _URLTemplatePart expansion;
     while (true) {
-      var c = index < string.length ? string[index] : null;
+      var c = _index < _string.length ? _string[_index] : null;
       switch (context) {
-        case URLTemplateParserContext.start:
+        case _URLTemplateParserContext.start:
           switch (c) {
             case '{':
-              context = URLTemplateParserContext.expansion;
+              context = _URLTemplateParserContext.expansion;
               buffer = '';
-              var n = index < string.length - 1 ? string[index + 1] : null;
+              var n = _index < _string.length - 1 ? _string[_index + 1] : null;
               switch (n) {
-                case '+': expansion = ReservedExpansion(); break;
-                case '#': expansion = FragmentExpansion(); break;
-                case '.': expansion = LabelExpansion(); break;
-                case '/': expansion = PathExpansion(); break;
-                case ';': expansion = ParameterExpansion(); break;
-                case '?': expansion = QueryExpansion(); break;
-                case '&': expansion = QueryContinuation(); break;
-                default: expansion = StringExpansion(); break;
+                case '+': expansion = _ReservedExpansion(); break;
+                case '#': expansion = _FragmentExpansion(); break;
+                case '.': expansion = _LabelExpansion(); break;
+                case '/': expansion = _PathExpansion(); break;
+                case ';': expansion = _ParameterExpansion(); break;
+                case '?': expansion = _QueryExpansion(); break;
+                case '&': expansion = _QueryContinuation(); break;
+                default: expansion = _StringExpansion(); break;
               }
-              index += (expansion.runtimeType == StringExpansion) ? 1 : 2;
+              _index += (expansion.runtimeType == _StringExpansion) ? 1 : 2;
               break;
             case null: return null;
             default:
               buffer = c;
-              index++;
-              context = URLTemplateParserContext.literal;
+              _index++;
+              context = _URLTemplateParserContext.literal;
               break;
           }
           break;
-        case URLTemplateParserContext.literal:
+        case _URLTemplateParserContext.literal:
           switch (c) {
-            case '{': case null: return StringLiteral(buffer);
+            case '{': case null: return _StringLiteral(buffer);
             default:
               buffer += c;
-              index++;
+              _index++;
               break;
           }
           break;
-        case URLTemplateParserContext.expansion:
+        case _URLTemplateParserContext.expansion:
           switch (c) {
             case '}':
-              index++;
+              _index++;
               _parseVariables(buffer, expansion);
               return expansion;
             case null:
               throw 'unterminated expansion';
             default:
               buffer += c;
-              index++;
+              _index++;
               break;
           }
           break;
@@ -102,39 +107,39 @@ class URLTemplateParser {
     }
   }
 
-  void _parseVariables(String string, URLTemplatePart part) {
-    part.variables = string.split(',').map((str) {
+  void _parseVariables(String string, _URLTemplatePart part) {
+    part._variables = string.split(',').map((str) {
       var match = RegExp(r"^(.*)\*$").firstMatch(str);
       if (match != null) {
-        return URLTemplateVariable(
+        return _URLTemplateVariable(
           match[1]!,
           explode: true,
-          allowReserved: part.allowReserved,
-          withName: part.withName,
-          keepEmpties: part.keepEmpties,
+          allowReserved: part._allowReserved,
+          withName: part._withName,
+          keepEmpties: part._keepEmpties,
         );
       }
       match = RegExp(r"^(.*):(\d+)$").firstMatch(str);
       if (match != null) {
-        return URLTemplateVariable(
+        return _URLTemplateVariable(
           match[1]!,
           limit: int.parse(match[2]!),
-          allowReserved: part.allowReserved,
-          withName: part.withName,
-          keepEmpties: part.keepEmpties,
+          allowReserved: part._allowReserved,
+          withName: part._withName,
+          keepEmpties: part._keepEmpties,
         );
       }
-      return URLTemplateVariable(
+      return _URLTemplateVariable(
         str,
-        allowReserved: part.allowReserved,
-        withName: part.withName,
-        keepEmpties: part.keepEmpties,
+        allowReserved: part._allowReserved,
+        withName: part._withName,
+        keepEmpties: part._keepEmpties,
       );
     }).toList();
   }
 }
 
-class URLTemplateVariable {
+class _URLTemplateVariable {
   String name;
   int? limit;
   bool explode;
@@ -142,7 +147,7 @@ class URLTemplateVariable {
   bool withName;
   bool keepEmpties;
 
-  URLTemplateVariable(this.name, {
+  _URLTemplateVariable(this.name, {
     this.limit,
     this.explode = false,
     this.allowReserved = false,
@@ -205,10 +210,10 @@ class URLTemplateVariable {
     var result = '';
     for (int i = 0; i < string.length; i++) {
       var c = string[i];
-      if (URLTemplateParser.unreserved.hasMatch(c) || (allowReserved && URLTemplateParser.reserved.hasMatch(c))) {
+      if (URLTemplateParser._unreserved.hasMatch(c) || (allowReserved && URLTemplateParser._reserved.hasMatch(c))) {
         result += c;
       } else {
-        result += IRLReferenceParser.percentEncode(c);
+        result += IRLParser.percentEncode(c);
       }
     }
     return result;
@@ -231,131 +236,129 @@ class URLTemplateVariable {
   }
 }
 
-abstract class URLTemplatePart {
-  List<URLTemplateVariable> variables;
+abstract class _URLTemplatePart {
+  List<_URLTemplateVariable> _variables;
 
-  URLTemplatePart([this.variables = const []]);
+  _URLTemplatePart([this._variables = const []]);
 
-  _expandVariables(values) {
+  _expandVariables(Map<String, dynamic> values) {
     var list = [];
-    for (var variable in variables) {
+    for (var variable in _variables) {
       var expanded = variable.expand(values[variable.name]);
       if (expanded != null) list.addAll(expanded);
     }
     return list;
   }
 
-  String get separator => ',';
-  String get prefix => '';
-  bool get allowReserved => false;
-  bool get withName => false;
-  bool get keepEmpties => false;
+  String get _separator => ',';
+  String get _prefix => '';
+  bool get _allowReserved => false;
+  bool get _withName => false;
+  bool get _keepEmpties => false;
 
-  String expand(values);
+  String _expand(values);
 }
 
-class StringLiteral extends URLTemplatePart {
+class _StringLiteral extends _URLTemplatePart {
   String value;
 
-  StringLiteral(this.value) : super([]);
+  _StringLiteral(this.value) : super([]);
 
   @override
-  expand(values) => value;
+  _expand(values) => value;
 
   @override
   String toString() => value;
 }
 
-class StringExpansion extends URLTemplatePart {
-  StringExpansion([super.variables]);
-
+class _StringExpansion extends _URLTemplatePart {
   @override
-  expand(values) {
+  _expand(values) {
     var expanded = _expandVariables(values);
     if (expanded.isEmpty) return '';
 
-    return prefix + expanded.join(separator);
+    return _prefix + expanded.join(_separator);
   }
 
   @override
-  String toString() => "{${variables.join(',')}}";
+  String toString() => "{${_variables.join(',')}}";
 }
 
-class ReservedExpansion extends StringExpansion {
+class _ReservedExpansion extends _StringExpansion {
   @override
-  bool get allowReserved => true;
+  bool get _allowReserved => true;
 
   @override
-  String toString() => "{+${variables.join(',')}}";
+  String toString() => "{+${_variables.join(',')}}";
 }
 
-class FragmentExpansion extends StringExpansion {
+class _FragmentExpansion extends _StringExpansion {
   @override
-  String get prefix => '#';
+  String get _prefix => '#';
 
   @override
-  bool get allowReserved => true;
+  bool get _allowReserved => true;
 
   @override
-  String toString() => "{#${variables.join(',')}}";
+  String toString() => "{#${_variables.join(',')}}";
 }
 
-class LabelExpansion extends StringExpansion {
+class _LabelExpansion extends _StringExpansion {
   @override
-  String get prefix => '.';
+  String get _prefix => '.';
 
   @override
-  String get separator => '.';
+  String get _separator => '.';
 
   @override
-  String toString() => "{.${variables.join(',')}}";
+  String toString() => "{.${_variables.join(',')}}";
 }
 
-class PathExpansion extends StringExpansion {
+class _PathExpansion extends _StringExpansion {
   @override
-  String get prefix => '/';
+  String get _prefix => '/';
 
   @override
-  String get separator => '/';
+  String get _separator => '/';
 
   @override
-  String toString() => "{/${variables.join(',')}}";
+  String toString() => "{/${_variables.join(',')}}";
 }
 
-class ParameterExpansion extends StringExpansion {
+class _ParameterExpansion extends _StringExpansion {
   @override
-  String get prefix => ';';
+  String get _prefix => ';';
 
   @override
-  String get separator => ';';
+  String get _separator => ';';
 
   @override
-  bool get withName => true;
+  bool get _withName => true;
 
   @override
-  String toString() => "{;${variables.join(',')}}";
+  String toString() => "{;${_variables.join(',')}}";
 }
 
-class QueryExpansion extends StringExpansion {
+class _QueryExpansion extends _StringExpansion {
   @override
-  String get prefix => '?';
+  String get _prefix => '?';
 
   @override
-  String get separator => '&';
+  String get _separator => '&';
 
   @override
-  bool get withName => true;
+  bool get _withName => true;
 
   @override
-  bool get keepEmpties => true;
+  bool get _keepEmpties => true;
 
   @override
-  String toString() => "{?${variables.join(',')}}";
+  String toString() => "{?${_variables.join(',')}}";
 }
 
-class QueryContinuation extends QueryExpansion {
-  @override get prefix => '&';
+class _QueryContinuation extends _QueryExpansion {
+  @override get _prefix => '&';
 
   @override
-  String toString() => "{&${variables.join(',')}}";
+  String toString() => "{&${_variables.join(',')}}";
 }

@@ -3,136 +3,142 @@ import 'package:kdl/src/tokenizer.dart';
 import 'package:kdl/src/types.dart';
 import 'package:kdl/src/exception.dart';
 
+/// KDL 2.0.0 Parser
 class KdlParser {
-  late KdlTokenizer tokenizer;
-  late Map<String, Function> typeParsers;
-  int depth = 0;
-  int get parserVersion => 2;
+  late KdlTokenizer _tokenizer;
+  Map<String, KdlTypeParser<KdlValue>> _valueTypes = {};
+  Map<String, KdlTypeParser<KdlNode>> _nodeTypes = {};
+  int _depth = 0;
+  int get _parserVersion => 2;
 
+  /// Parse a string into a KdlDocument
+  /// optionally passing in custom `valueTypes` and `nodeTypes`
+  /// or turning off type parsing with `parseTypes: false`
   KdlDocument parse(String string,
-      {Map<String, Function> typeParsers = const {}, bool parseTypes = true}) {
-    tokenizer = createTokenizer(string);
+      {Map<String, KdlTypeParser<KdlValue>> valueTypes = const {},
+      Map<String, KdlTypeParser<KdlNode>> nodeTypes = const {},
+      bool parseTypes = true}) {
+    _tokenizer = _createTokenizer(string);
     _checkVersion();
 
     if (parseTypes) {
-      this.typeParsers = {...KdlTypes.mapping, ...typeParsers};
-    } else {
-      this.typeParsers = {};
+      _valueTypes = {...defaultValueTypeParsers, ...valueTypes};
+      _nodeTypes = nodeTypes;
     }
 
-    return document();
+    return _document();
   }
 
-  KdlTokenizer createTokenizer(String string) {
+  KdlTokenizer _createTokenizer(String string) {
     return KdlTokenizer(string);
   }
 
   void _checkVersion() {
-    var docVersion = tokenizer.versionDirective();
+    var docVersion = _tokenizer.versionDirective();
     if (docVersion == null) return;
-    if (docVersion != parserVersion) {
-      throw KdlVersionMismatchException(docVersion, parserVersion);
+    if (docVersion != _parserVersion) {
+      throw KdlVersionMismatchException(docVersion, _parserVersion);
     }
   }
 
-  KdlDocument document() {
-    var nodes = nodeList();
-    linespaceStar();
-    expectEndOfFile();
+  KdlDocument _document() {
+    var nodes = _nodeList();
+    _linespaceStar();
+    _expectEndOfFile();
     return KdlDocument(nodes);
   }
 
-  List<KdlNode> nodeList() {
+  List<KdlNode> _nodeList() {
     List<KdlNode> nodes = [];
-    KdlNode? n;
-    while (((n, _) = node()).$2 != false) {
-      if (n != null) nodes.add(n);
+    KdlNode? node;
+    while (((node, _) = _node()).$2 != false) {
+      if (node != null) nodes.add(node);
     }
     return nodes;
   }
 
-  (KdlNode?, bool) node() {
-    linespaceStar();
+  (KdlNode?, bool) _node() {
+    _linespaceStar();
 
     var commented = false;
-    if (tokenizer.peekToken().type == KdlTerm.slashdash) {
-      slashdash();
+    if (_tokenizer.peekToken().type == KdlTerm.slashdash) {
+      _slashdash();
       commented = true;
     }
 
     KdlNode node;
     String? ty;
     try {
-      ty = type();
-      node = KdlNode(identifier());
+      ty = _type();
+      node = KdlNode(_identifier());
     } catch (error) {
       if (ty != null) rethrow;
       return (null, false);
     }
 
-    argsPropsChildren(node);
+    _argsPropsChildren(node);
 
     if (commented) return (null, true);
 
     if (ty != null) {
-      return (node.asType(ty, typeParsers[ty]), true);
+      return (node.asType(ty, _nodeTypes[ty]), true);
     }
     return (node, true);
   }
 
-  String identifier() {
-    var t = tokenizer.peekToken();
+  String _identifier() {
+    var t = _tokenizer.peekToken();
     if (t.type == KdlTerm.ident ||
         t.type == KdlTerm.string ||
         t.type == KdlTerm.rawstring) {
-      tokenizer.nextToken();
+      _tokenizer.nextToken();
       return t.value;
     }
-    throw ex("Expected identifier, got ${t.type}", t);
+    throw _ex("Expected identifier, got ${t.type}", t);
   }
 
-  void wsStar() {
-    var t = tokenizer.peekToken();
+  void _wsStar() {
+    var t = _tokenizer.peekToken();
     while (t.type == KdlTerm.whitespace) {
-      tokenizer.nextToken();
-      t = tokenizer.peekToken();
+      _tokenizer.nextToken();
+      t = _tokenizer.peekToken();
     }
   }
 
-  void linespaceStar() {
-    while (isLinespace(tokenizer.peekToken())) {
-      tokenizer.nextToken();
+  void _linespaceStar() {
+    while (_isLinespace(_tokenizer.peekToken())) {
+      _tokenizer.nextToken();
     }
   }
 
-  bool isLinespace(KdlToken t) {
+  bool _isLinespace(KdlToken t) {
     return (t.type == KdlTerm.newline || t.type == KdlTerm.whitespace);
   }
 
-  void argsPropsChildren(KdlNode node) {
+  void _argsPropsChildren(KdlNode node) {
     var commented = false;
     var hasChildren = false;
     while (true) {
-      var peek = tokenizer.peekToken();
+      var peek = _tokenizer.peekToken();
       switch (peek.type) {
         case KdlTerm.whitespace:
-          wsStar();
-          peek = tokenizer.peekToken();
+          _wsStar();
+          peek = _tokenizer.peekToken();
           if (peek.type == KdlTerm.slashdash) {
-            slashdash();
-            peek = tokenizer.peekToken();
+            _slashdash();
+            peek = _tokenizer.peekToken();
             commented = true;
           }
           switch (peek.type) {
             case KdlTerm.string:
             case KdlTerm.ident:
-              if (hasChildren) throw ex("Unexpected ${peek.type}", peek);
-              var t = tokenizer.peekTokenAfterNext();
+              if (hasChildren) throw _ex("Unexpected ${peek.type}", peek);
+              var t = _tokenizer.peekTokenAfterNext();
               if (t.type == KdlTerm.equals) {
-                var p = prop();
-                if (!commented) node.properties[p[0]] = p[1];
+                var p = _prop();
+                if (!commented) node.properties[p.$1] = p.$2;
               } else {
-                var v = value();
+                var v = _value();
                 if (!commented) node.arguments.add(v);
               }
               commented = false;
@@ -140,19 +146,19 @@ class KdlParser {
             case KdlTerm.newline:
             case KdlTerm.eof:
             case KdlTerm.semicolon:
-              tokenizer.nextToken();
+              _tokenizer.nextToken();
               return;
             case KdlTerm.lbrace:
-              lbrace(node, commented);
+              _lbrace(node, commented);
               hasChildren = true;
               commented = false;
               break;
             case KdlTerm.rbrace:
-              rbrace();
+              _rbrace();
               return;
             default:
-              var v = value();
-              if (hasChildren) throw ex("Unexpected ${peek.type}", peek);
+              var v = _value();
+              if (hasChildren) throw _ex("Unexpected ${peek.type}", peek);
               if (!commented) node.arguments.add(v);
               commented = false;
               break;
@@ -161,63 +167,63 @@ class KdlParser {
         case KdlTerm.eof:
         case KdlTerm.semicolon:
         case KdlTerm.newline:
-          tokenizer.nextToken();
+          _tokenizer.nextToken();
           return;
         case KdlTerm.lbrace:
-          lbrace(node, commented);
+          _lbrace(node, commented);
           hasChildren = true;
           commented = false;
           break;
         case KdlTerm.rbrace:
-          rbrace();
+          _rbrace();
           return;
         default:
-          throw ex("Unexpected ${peek.type}", peek);
+          throw _ex("Unexpected ${peek.type}", peek);
       }
     }
   }
 
-  void lbrace(KdlNode node, bool commented) {
-    if (!commented && node.hasChildren) throw ex("Unexpected {");
-    depth += 1;
-    var childNodes = children();
-    depth -= 1;
+  void _lbrace(KdlNode node, bool commented) {
+    if (!commented && node.hasChildren) throw _ex("Unexpected {");
+    _depth += 1;
+    var children = _children();
+    _depth -= 1;
     if (!commented) {
-      node.children = childNodes;
+      node.children = children;
     }
   }
 
-  void rbrace() {
-    if (depth == 0) throw "Unexpected }";
+  void _rbrace() {
+    if (_depth == 0) throw "Unexpected }";
   }
 
-  prop() {
-    var name = identifier();
-    expect(KdlTerm.equals);
-    var val = value();
-    return [name, val];
+  (String, KdlValue) _prop() {
+    var name = _identifier();
+    _expect(KdlTerm.equals);
+    var val = _value();
+    return (name, val);
   }
 
-  List<KdlNode> children() {
-    expect(KdlTerm.lbrace);
-    var nodes = nodeList();
-    linespaceStar();
-    expect(KdlTerm.rbrace);
+  List<KdlNode> _children() {
+    _expect(KdlTerm.lbrace);
+    var nodes = _nodeList();
+    _linespaceStar();
+    _expect(KdlTerm.rbrace);
     return nodes;
   }
 
-  KdlValue value() {
-    var ty = type();
-    var t = tokenizer.nextToken();
-    var v = valueWithoutType(t);
+  KdlValue _value() {
+    var ty = _type();
+    var t = _tokenizer.nextToken();
+    var v = _valueWithoutType(t);
     if (ty == null) {
       return v;
     } else {
-      return v.asType(ty, typeParsers[ty]);
+      return v.asType(ty, _valueTypes[ty]);
     }
   }
 
-  KdlValue valueWithoutType(KdlToken t) {
+  KdlValue _valueWithoutType(KdlToken t) {
     switch (t.type) {
       case KdlTerm.ident:
       case KdlTerm.string:
@@ -235,56 +241,164 @@ class KdlParser {
       case KdlTerm.nullKeyword:
         return KdlNull();
       default:
-        throw ex("Expected value, got ${t.type}", t);
+        throw _ex("Expected value, got ${t.type}", t);
     }
   }
 
-  String? type() {
-    if (tokenizer.peekToken().type != KdlTerm.lparen) return null;
-    expect(KdlTerm.lparen);
-    wsStar();
-    var ty = identifier();
-    wsStar();
-    expect(KdlTerm.rparen);
-    wsStar();
+  String? _type() {
+    if (_tokenizer.peekToken().type != KdlTerm.lparen) return null;
+    _expect(KdlTerm.lparen);
+    _wsStar();
+    var ty = _identifier();
+    _wsStar();
+    _expect(KdlTerm.rparen);
+    _wsStar();
     return ty;
   }
 
-  void slashdash() {
-    var t = tokenizer.nextToken();
+  void _slashdash() {
+    var t = _tokenizer.nextToken();
     if (t.type != KdlTerm.slashdash) {
-      throw ex("Expected SLASHDASH, found ${t.type}", t);
+      throw _ex("Expected SLASHDASH, found ${t.type}", t);
     }
-    linespaceStar();
-    var peek = tokenizer.peekToken();
+    _linespaceStar();
+    var peek = _tokenizer.peekToken();
     switch (peek.type) {
       case KdlTerm.rbrace:
       case KdlTerm.eof:
       case KdlTerm.semicolon:
-        throw ex("Unexpected ${peek.type} after SLASHDASH", peek);
+        throw _ex("Unexpected ${peek.type} after SLASHDASH", peek);
       default:
         break;
     }
   }
 
-  expect(KdlTerm type) {
-    var t = tokenizer.peekToken();
+  _expect(KdlTerm type) {
+    var t = _tokenizer.peekToken();
     if (t.type == type) {
-      return tokenizer.nextToken().value;
+      return _tokenizer.nextToken().value;
     } else {
-      throw ex("Expected $type, got ${t.type}", t);
+      throw _ex("Expected $type, got ${t.type}", t);
     }
   }
 
-  void expectEndOfFile() {
-    var t = tokenizer.peekToken();
+  void _expectEndOfFile() {
+    var t = _tokenizer.peekToken();
     if (t.type == KdlTerm.eof) return;
 
-    throw ex("Expected EOF, got ${t.type}", t);
+    throw _ex("Expected EOF, got ${t.type}", t);
   }
 
-  KdlParseException ex(String message, [KdlToken? token]) {
-    token = token ?? tokenizer.peekToken();
+  KdlParseException _ex(String message, [KdlToken? token]) {
+    token = token ?? _tokenizer.peekToken();
     return KdlParseException(message, token.line, token.column);
+  }
+}
+
+/// KDL 1.0 Parser
+class KdlV1Parser extends KdlParser {
+  @override
+  int get _parserVersion => 1;
+
+  @override
+  KdlTokenizer _createTokenizer(String string) {
+    return KdlV1Tokenizer(string);
+  }
+
+  @override
+  void _argsPropsChildren(KdlNode node) {
+    var commented = false;
+    while (true) {
+      _wsStar();
+      switch (_tokenizer.peekToken().type) {
+      case KdlTerm.ident:
+        var p = _prop();
+        if (!commented) {
+          node.properties[p.$1] = p.$2;
+        }
+        commented = false;
+        break;
+      case KdlTerm.lbrace:
+        var childNodes = _children();
+        if (!commented) {
+          node.children = childNodes;
+        }
+        _expectNodeTerm();
+        return;
+      case KdlTerm.slashdash:
+        commented = true;
+        _tokenizer.nextToken();
+        _wsStar();
+        break;
+      case KdlTerm.newline:
+      case KdlTerm.eof:
+      case KdlTerm.semicolon:
+        _tokenizer.nextToken();
+        return;
+      case KdlTerm.string:
+        var t = _tokenizer.peekTokenAfterNext();
+        if (t.type == KdlTerm.equals) {
+          var p = _prop();
+          if (!commented) {
+            node.properties[p.$1] = p.$2;
+          }
+        } else {
+          var v = _value();
+          if (!commented) {
+            node.arguments.add(v);
+          }
+        }
+        commented = false;
+        break;
+      default:
+        var v = _value();
+        if (!commented) {
+          node.arguments.add(v);
+        }
+        commented = false;
+        break;
+      }
+    }
+  }
+
+  @override
+  KdlValue _valueWithoutType(KdlToken t) {
+    switch (t.type) {
+      case KdlTerm.string:
+      case KdlTerm.rawstring:
+        return KdlString(t.value);
+      case KdlTerm.integer:
+        return KdlInt(t.value);
+      case KdlTerm.decimal:
+        return KdlBigDecimal(t.value);
+      case KdlTerm.double:
+        return KdlDouble(t.value);
+      case KdlTerm.trueKeyword:
+      case KdlTerm.falseKeyword:
+        return KdlBool(t.value);
+      case KdlTerm.nullKeyword:
+        return KdlNull();
+      default:
+        throw _ex("Expected value, got ${t.type}", t);
+    }
+  }
+
+  @override
+  String? _type() {
+    if (_tokenizer.peekToken().type != KdlTerm.lparen) return null;
+    _expect(KdlTerm.lparen);
+    var ty = _identifier();
+    _expect(KdlTerm.rparen);
+    return ty;
+  }
+
+  _expectNodeTerm() {
+    _wsStar();
+    var t = _tokenizer.peekToken().type;
+    if (t == KdlTerm.newline || t == KdlTerm.semicolon || t == KdlTerm.eof) {
+      _tokenizer.nextToken();
+    } else {
+      throw "Unexpected $t";
+    }
   }
 }

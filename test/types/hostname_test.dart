@@ -5,21 +5,21 @@ import 'package:kdl/src/types/hostname.dart';
 
 void main() {
   test('hostname', () {
-    expect(KdlHostname.call(KdlString('www.example.com')).value,
+    expect(KdlHostname.call(KdlString('www.example.com'))!.value,
         equals('www.example.com'));
 
     // 63 a's
     var maxPartLength =
         'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.com';
-    expect(KdlHostname.call(KdlString(maxPartLength)).value,
+    expect(KdlHostname.call(KdlString(maxPartLength))!.value,
         equals(maxPartLength));
 
     var maxLength =
-        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
         'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.'
         'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.'
-        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.';
-    expect(KdlHostname.call(KdlString(maxLength)).value, equals(maxLength));
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.'
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    expect(KdlHostname.call(KdlString(maxLength))?.value, equals(maxLength));
 
     expect(
         () => KdlHostname.call(KdlString('not a hostname')), throwsA(anything));
@@ -32,11 +32,11 @@ void main() {
   });
 
   test('idn hostname', () {
-    var value = KdlIDNHostname.call(KdlString('xn--bcher-kva.example'));
+    var value = KdlIDNHostname.call(KdlString('xn--bcher-kva.example'))!;
     expect(value.value, equals('xn--bcher-kva.example'));
     expect(value.unicodeValue, equals('bücher.example'));
 
-    value = KdlIDNHostname.call(KdlString('bücher.example'));
+    value = KdlIDNHostname.call(KdlString('bücher.example'))!;
     expect(value.value, equals('xn--bcher-kva.example'));
     expect(value.unicodeValue, equals('bücher.example'));
 

@@ -5,8 +5,8 @@ import 'package:kdl/src/types/ip.dart';
 
 void main() {
   test('ipv4', () {
-    expect(KdlIPV4.call(KdlString('127.0.0.1')).value, equals('127.0.0.1'));
-    expect(KdlIPV4.call(KdlString('192.168.42.255')).value,
+    expect(KdlIPV4.call(KdlString('127.0.0.1'))!.value, equals('127.0.0.1'));
+    expect(KdlIPV4.call(KdlString('192.168.42.255'))!.value,
         equals('192.168.42.255'));
 
     expect(() => KdlIPV4.call(KdlString('not an ipv4 address')),
@@ -34,7 +34,7 @@ void main() {
       '::FFFF:129.144.52.38'
     ];
     for (var addr in addresses) {
-      expect(KdlIPV6.call(KdlString(addr)).value, equals(addr));
+      expect(KdlIPV6.call(KdlString(addr))!.value, equals(addr));
     }
 
     expect(() => KdlIPV6.call(KdlString('not an ipv6 address')),

@@ -1,13 +1,5 @@
-import 'package:kdl/kdl.dart';
+/// Exports the public interface of KDL
+library;
 
-export 'package:kdl/src/document.dart';
-
-///
-abstract class Kdl {
-  @Deprecated("Use KdlDocument.parse instead")
-  static parseDocument(String string,
-      {Map<String, Function> typeParsers = const {}, bool parseTypes = true}) {
-    return KdlDocument.parse(string,
-        typeParsers: typeParsers, parseTypes: parseTypes);
-  }
-}
+export 'src/document.dart';
+export 'src/exception.dart';

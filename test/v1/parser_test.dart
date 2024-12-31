@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 
 import 'package:kdl/src/document.dart';
 import 'package:kdl/src/exception.dart';
-import 'package:kdl/src/v1/parser.dart';
+import 'package:kdl/src/parser.dart';
 
 void main() {
   late KdlV1Parser parser;

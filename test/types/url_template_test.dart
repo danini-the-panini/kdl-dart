@@ -24,23 +24,23 @@ var variables = {
 };
 
 void assertExpansionEqual(String template, String expected) {
-  var value = KdlURLTemplate.call(KdlString(template));
+  var value = KdlURLTemplate.call(KdlString(template))!;
   expect(value.expand(variables), equals(Uri.parse(expected)));
 }
 
 void main() {
   test('no variables', () {
-    var value = KdlURLTemplate.call(KdlString('https://www.example.com/foo/bar'));
+    var value = KdlURLTemplate.call(KdlString('https://www.example.com/foo/bar'))!;
     expect(value.expand({}), equals(Uri.parse('https://www.example.com/foo/bar')));
   });
 
   test('one variable', () {
-    var value = KdlURLTemplate.call(KdlString('https://www.example.com/{foo}/bar'));
+    var value = KdlURLTemplate.call(KdlString('https://www.example.com/{foo}/bar'))!;
     expect(value.expand({ 'foo': 'lorem' }), equals(Uri.parse('https://www.example.com/lorem/bar')));
   });
 
   test('multiple_variables', () {
-    var value = KdlURLTemplate.call(KdlString('https://www.example.com/{foo}/{bar}'));
+    var value = KdlURLTemplate.call(KdlString('https://www.example.com/{foo}/{bar}'))!;
     expect(value.expand({ 'foo': 'lorem', 'bar': 'ipsum' }),
       equals(Uri.parse('https://www.example.com/lorem/ipsum')));
   });
@@ -190,4 +190,3 @@ void main() {
     assertExpansionEqual('{&keys*}', '&semi=%3B&dot=.&comma=%2C');
   });
 }
-

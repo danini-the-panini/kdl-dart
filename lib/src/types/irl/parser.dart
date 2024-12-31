@@ -2,27 +2,142 @@ import "dart:convert";
 
 import "../hostname/validator.dart";
 
-class IRLReferenceParser {
-  static final rgx = RegExp(r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$", caseSensitive: false);
-  static final percentRgx = RegExp(r"%([a-f0-9]{2})", caseSensitive: false);
+/// RFC3987 Internationalized Resource Identifier.
+class IRL {
+  /// ASCII punycode value
+  String asciiValue;
 
-  static const reservedUrlChars = [
-    '!', '#', '&', "'", '(', ')', '*', '+', ',', '/', ':', ';', '=', '?', '@', '[', ']', '%'
+  /// Unicode value
+  String unicodeValue;
+
+  /// Unicode domain
+  String? unicodeDomain;
+
+  /// Unicode path
+  String? unicodePath;
+
+  /// Unicode search query
+  String? unicodeSearch;
+
+  /// Unicode hash value
+  String? unicodeHash;
+
+  /// Construct a new IRL
+  IRL(this.asciiValue, this.unicodeValue, [this.unicodeDomain, this.unicodePath,
+      this.unicodeSearch, this.unicodeHash]);
+}
+
+/// Parses a string into an IRL
+class IRLParser {
+  static final _rgx = RegExp(
+      r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$",
+      caseSensitive: false);
+
+  static const _reservedUrlChars = [
+    '!',
+    '#',
+    '&',
+    "'",
+    '(',
+    ')',
+    '*',
+    '+',
+    ',',
+    '/',
+    ':',
+    ';',
+    '=',
+    '?',
+    '@',
+    '[',
+    ']',
+    '%'
   ];
-  static const unreservedUrlChars = [
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
-    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_', '.', '~'
+  static const _unreservedUrlChars = [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+    '0',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '-',
+    '_',
+    '.',
+    '~'
   ];
-  static final urlChars = reservedUrlChars + unreservedUrlChars;
+  static final _urlChars = _reservedUrlChars + _unreservedUrlChars;
 
-  String string;
+  final String _string;
+  final bool _isReference;
 
-  IRLReferenceParser(this.string);
+  /// Construct a new parser to parse the given string
+  /// pass `isReference: false` to validate this as a full IRL
+  /// (i.e. has a scheme)
+  IRLParser(this._string, {isReference = true}) : _isReference = isReference;
 
-  parse() {
+  /// Parse the string into an IRL
+  IRL parse() {
     List<String?> parts = _parseUrl();
     var scheme = parts[0];
+    if (!_isReference && (scheme == null || scheme.isEmpty)) {
+      throw "invalid IRL $_string";
+    }
     var auth = parts[1];
     var domain = parts[2];
     var path = parts[3];
@@ -34,12 +149,14 @@ class IRLReferenceParser {
     String? unicodeSearch;
     String? unicodeHash;
 
-    if (string.runes.any((rune) => rune > 127)) {
+    if (_string.runes.any((rune) => rune > 127)) {
       unicodePath = path;
       path = _encode(unicodePath);
       unicodeSearch = search;
       var searchParams = unicodeSearch?.split('&').map((x) => x.split('='));
-      search = searchParams?.map((x) => "${_encode(x[0])}=${_encode(x[1])}").join('&');
+      search = searchParams
+          ?.map((x) => "${_encode(x[0])}=${_encode(x[1])}")
+          .join('&');
       unicodeHash = hash;
       hash = _encode(hash);
     } else {
@@ -56,45 +173,44 @@ class IRLReferenceParser {
       unicodeDomain = domain;
     }
 
-    var unicodeValue = _buildUriString(scheme, auth, unicodeDomain, unicodePath, unicodeSearch, unicodeHash);
+    var unicodeValue = _buildUriString(
+        scheme, auth, unicodeDomain, unicodePath, unicodeSearch, unicodeHash);
     var asciiValue = _buildUriString(scheme, auth, domain, path, search, hash);
 
-    return [
-      asciiValue,
-      unicodeValue,
-      unicodeDomain,
-      unicodePath,
-      unicodeSearch,
-      unicodeHash
-    ];
+    return IRL(asciiValue, unicodeValue, unicodeDomain, unicodePath,
+        unicodeSearch, unicodeHash);
   }
 
   List<String?> _parseUrl() {
-    var match = rgx.firstMatch(string);
-    if (match == null) throw "invalid IRL $string";
+    var match = _rgx.firstMatch(_string);
+    if (match == null) throw "invalid IRL $_string";
 
-    var parts = match.groups([1,2,3,4,5,6]);
-    if (parts.any((part) => !_isValidUrlPart(part))) throw "invalid IRL $string";
+    var parts = match.groups([1, 2, 3, 4, 5, 6]);
+    if (parts.any((part) => !_isValidUrlPart(part))) {
+      throw "invalid IRL $_string";
+    }
 
     return parts;
   }
 
-  static _isValidUrlPart(String? string) {
+  static bool _isValidUrlPart(String? string) {
     if (string == null) return true;
 
     return !string.runes.any((rune) =>
-      rune <= 127 && !urlChars.contains(String.fromCharCode(rune)));
+        rune <= 127 && !_urlChars.contains(String.fromCharCode(rune)));
   }
 
-  static _encode(String? string) {
+  static String? _encode(String? string) {
     if (string == null) return null;
 
     return string.runes
-      .map((c) => c <= 127 ? String.fromCharCode(c) : percentEncode(String.fromCharCode(c)))
-      .join();
+        .map((c) => c <= 127
+            ? String.fromCharCode(c)
+            : percentEncode(String.fromCharCode(c)))
+        .join();
   }
 
-  static _decode(String? string) {
+  static String? _decode(String? string) {
     if (string == null) return null;
 
     List<int> bytes = [];
@@ -111,11 +227,17 @@ class IRLReferenceParser {
     return utf8.decode(bytes);
   }
 
-  static percentEncode(String c) {
-    return utf8.encode(c).map((b) => "%${b.toRadixString(16)}").join().toUpperCase();
+  /// URL-encode the given string
+  static String percentEncode(String c) {
+    return utf8
+        .encode(c)
+        .map((b) => "%${b.toRadixString(16)}")
+        .join()
+        .toUpperCase();
   }
 
-  static _buildUriString(String? scheme, String? auth, String? domain, String? path, String? search, String? hash) {
+  static String _buildUriString(String? scheme, String? auth, String? domain,
+      String? path, String? search, String? hash) {
     var string = '';
     if (scheme != null) string += "$scheme://";
     if (auth != null) string += auth;
@@ -124,18 +246,5 @@ class IRLReferenceParser {
     if (search != null) string += "?$search";
     if (hash != null) string += "#$hash";
     return string;
-  }
-}
-
-class IRLParser extends IRLReferenceParser {
-  IRLParser(super.string);
-
-  @override
-  _parseUrl() {
-    var parts = super._parseUrl();
-    var scheme = parts[0];
-    if (scheme == null || scheme.isEmpty) throw "invalid IRL $string";
-
-    return parts;
   }
 }

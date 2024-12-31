@@ -2,7 +2,7 @@ import 'package:test/test.dart';
 import 'dart:io';
 import 'package:path/path.dart' as p;
 
-import 'package:kdl/src/v1/parser.dart';
+import 'package:kdl/src/parser.dart';
 import 'package:kdl/src/exception.dart';
 
 void main() {
