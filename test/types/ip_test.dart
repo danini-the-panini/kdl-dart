@@ -33,9 +33,9 @@ void main() {
       '::13.1.68.3',
       '::FFFF:129.144.52.38'
     ];
-    addresses.forEach((addr) {
+    for (var addr in addresses) {
       expect(KdlIPV6.call(KdlString(addr)).value, equals(addr));
-    });
+    }
 
     expect(() => KdlIPV6.call(KdlString('not an ipv6 address')),
         throwsA(anything));

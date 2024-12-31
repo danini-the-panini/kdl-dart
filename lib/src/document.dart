@@ -1,7 +1,10 @@
 import 'dart:collection';
 
+import 'package:kdl/src/exception.dart';
+import 'package:kdl/src/parser.dart';
 import "package:kdl/src/string_dumper.dart";
 import 'package:big_decimal/big_decimal.dart';
+import 'package:kdl/src/v1/parser.dart';
 
 _sameNodes(List<KdlNode> nodes, List<KdlNode> otherNodes) {
   if (nodes.length != otherNodes.length) return false;
@@ -16,8 +19,38 @@ _sameNodes(List<KdlNode> nodes, List<KdlNode> otherNodes) {
 class KdlDocument with IterableMixin<KdlNode> {
   List<KdlNode> nodes = [];
 
+  static KdlDocument parse(String string,
+      {int? version,
+      Map<String, Function> typeParsers = const {},
+      bool parseTypes = true}) {
+    switch (version) {
+      case 1:
+        return KdlV1Parser()
+            .parse(string, typeParsers: typeParsers, parseTypes: parseTypes);
+      case 2:
+        return KdlParser()
+            .parse(string, typeParsers: typeParsers, parseTypes: parseTypes);
+      case null:
+        try {
+          return parse(string,
+              version: 2, typeParsers: typeParsers, parseTypes: parseTypes);
+        } on KdlVersionMismatchException catch (e) {
+          return parse(string,
+              version: e.version,
+              typeParsers: typeParsers,
+              parseTypes: parseTypes);
+        } on KdlParseException {
+          return parse(string,
+              version: 1, typeParsers: typeParsers, parseTypes: parseTypes);
+        }
+      default:
+        throw KdlException(
+            "Unsupported version $version, supported versions are 1 or 2");
+    }
+  }
+
   KdlDocument(List<KdlNode> initialNodes) {
-    this.nodes = initialNodes;
+    nodes = initialNodes;
   }
 
   arg(key) {
@@ -58,31 +91,29 @@ class KdlDocument with IterableMixin<KdlNode> {
 
   @override
   String toString() {
-    return nodes.map((e) => e.toString()).join("\n") + "\n";
+    return "${nodes.map((e) => e.toString()).join("\n")}\n";
   }
 }
 
 class KdlNode with IterableMixin<KdlNode> {
   String name = '';
-  String? type = null;
+  String? type;
   List<KdlNode> children = [];
   List<KdlValue> arguments = [];
   Map<String, KdlValue> properties = {};
 
-  KdlNode(String name,
-      {List<KdlNode>? children = null,
-      List<KdlValue>? arguments = null,
-      Map<String, KdlValue>? properties = null,
-      String? type = null}) {
-    this.name = name;
+  KdlNode(this.name,
+      {List<KdlNode>? children,
+      List<KdlValue>? arguments,
+      Map<String, KdlValue>? properties,
+      this.type}) {
     this.children = children ?? [];
     this.arguments = arguments ?? [];
     this.properties = properties ?? {};
-    this.type = type;
   }
 
   bool get hasChildren {
-    return this.children.isNotEmpty;
+    return children.isNotEmpty;
   }
 
   KdlNode child(key) {
@@ -150,7 +181,7 @@ class KdlNode with IterableMixin<KdlNode> {
 
     if (result == null) return asType(type);
 
-    if (!(result is KdlNode)) {
+    if (result is! KdlNode) {
       throw "expected parser to return an instance of KdlNode, got ${result.runtimeType}";
     }
 
@@ -160,7 +191,7 @@ class KdlNode with IterableMixin<KdlNode> {
   String _toStringWithIndentation(int indentation) {
     String indent = "    " * indentation;
     String typeStr = type != null ? "(${_idToString(type!)})" : "";
-    String s = "${indent}${typeStr}${_idToString(name)}";
+    String s = "$indent$typeStr${_idToString(name)}";
     if (arguments.isNotEmpty) {
       s += " ${arguments.map((a) => a.toString()).join(' ')}";
     }
@@ -172,7 +203,7 @@ class KdlNode with IterableMixin<KdlNode> {
       var childrenStr = children
           .map((e) => e._toStringWithIndentation(indentation + 1))
           .join("\n");
-      s += " {\n${childrenStr}\n${indent}}";
+      s += " {\n$childrenStr\n$indent}";
     }
     return s;
   }
@@ -201,7 +232,7 @@ class KdlNode with IterableMixin<KdlNode> {
 
 abstract class KdlValue<T> {
   late T value;
-  String? type = null;
+  String? type;
 
   KdlValue(this.value, [this.type]);
 
@@ -212,8 +243,11 @@ abstract class KdlValue<T> {
     if (v is BigDecimal) return KdlBigDecimal(v, type);
     if (v is bool) return KdlBool(v, type);
     if (v == null) return KdlNull(type);
-    throw "No KDL value for ${v}";
+    throw "No KDL value for $v";
   }
+
+  @override
+  int get hashCode => value.hashCode;
 
   @override
   bool operator ==(other) {
@@ -240,7 +274,7 @@ abstract class KdlValue<T> {
     var result = parser(this, type);
     if (result == null) return asType(type);
 
-    if (!(result is KdlValue)) {
+    if (result is! KdlValue) {
       throw "expected parser to return an instance of KdlValue, got ${result.runtimeType}";
     }
 
@@ -253,10 +287,7 @@ abstract class KdlValue<T> {
 }
 
 class KdlString extends KdlValue<String> {
-  KdlString(String value, [String? type]) : super(value, type);
-
-  @override
-  int get hashCode => value.hashCode;
+  KdlString(super.value, [super.type]);
 
   @override
   String _stringifyValue() {
@@ -265,14 +296,13 @@ class KdlString extends KdlValue<String> {
 }
 
 class KdlBigDecimal extends KdlValue<BigDecimal> {
-  KdlBigDecimal(BigDecimal value, [String? type]) : super(value, type);
+  KdlBigDecimal(super.value, [super.type]);
   KdlBigDecimal.from(num value, [String? type])
       : super(BigDecimal.parse(value.toString()), type);
 
   @override
   bool operator ==(other) {
     if (other is KdlBigDecimal) return value == other.value;
-    if (other is KdlDouble) return value == other.value;
     return value == other;
   }
 
@@ -286,14 +316,14 @@ class KdlBigDecimal extends KdlValue<BigDecimal> {
 }
 
 class KdlDouble extends KdlValue<double> {
-  KdlDouble(double value, [String? type]) : super(value, type);
+  KdlDouble(super.value, [super.type]);
 
   @override
   bool operator ==(other) {
-    if (other is KdlDouble) return this == other.value;
-    if (other is KdlBigDecimal) return value == other.value;
+    var otherValue = other;
+    if (other is KdlValue) otherValue = other.value;
 
-    if (value.isNaN && other is double && other.isNaN) return true;
+    if (value.isNaN && otherValue is double && otherValue.isNaN) return true;
     return value == other;
   }
 
@@ -311,7 +341,7 @@ class KdlDouble extends KdlValue<double> {
 }
 
 class KdlInt<I> extends KdlValue<I> {
-  KdlInt(I value, [String? type]) : super(value, type);
+  KdlInt(super.value, [super.type]);
 
   @override
   bool operator ==(other) => other is KdlInt && value == other.value;
@@ -321,7 +351,7 @@ class KdlInt<I> extends KdlValue<I> {
 }
 
 class KdlBool extends KdlValue<bool> {
-  KdlBool(bool value, [String? type]) : super(value, type);
+  KdlBool(super.value, [super.type]);
 
   @override
   bool operator ==(other) => other is KdlBool && value == other.value;

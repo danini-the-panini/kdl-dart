@@ -7,15 +7,15 @@ class KdlParser {
   late KdlTokenizer tokenizer;
   late Map<String, Function> typeParsers;
   int depth = 0;
-  int parserVersion = 2;
+  int get parserVersion => 2;
 
   KdlDocument parse(String string,
       {Map<String, Function> typeParsers = const {}, bool parseTypes = true}) {
-    this.tokenizer = createTokenizer(string);
+    tokenizer = createTokenizer(string);
     _checkVersion();
 
     if (parseTypes) {
-      this.typeParsers = {...KdlTypes.MAPPING, ...typeParsers};
+      this.typeParsers = {...KdlTypes.mapping, ...typeParsers};
     } else {
       this.typeParsers = {};
     }
@@ -44,46 +44,47 @@ class KdlParser {
 
   List<KdlNode> nodeList() {
     List<KdlNode> nodes = [];
-    var n;
-    while ((n = node()) != false) {
+    KdlNode? n;
+    while (((n, _) = node()).$2 != false) {
       if (n != null) nodes.add(n);
     }
     return nodes;
   }
 
-  node() {
+  (KdlNode?, bool) node() {
     linespaceStar();
 
     var commented = false;
-    if (tokenizer.peekToken().type == KdlTerm.SLASHDASH) {
+    if (tokenizer.peekToken().type == KdlTerm.slashdash) {
       slashdash();
       commented = true;
     }
 
-    var node, ty;
+    KdlNode node;
+    String? ty;
     try {
       ty = type();
       node = KdlNode(identifier());
     } catch (error) {
-      if (ty != null) throw error;
-      return false;
+      if (ty != null) rethrow;
+      return (null, false);
     }
 
     argsPropsChildren(node);
 
-    if (commented) return null;
+    if (commented) return (null, true);
 
     if (ty != null) {
-      return node.asType(ty, typeParsers[ty]);
+      return (node.asType(ty, typeParsers[ty]), true);
     }
-    return node;
+    return (node, true);
   }
 
   String identifier() {
     var t = tokenizer.peekToken();
-    if (t.type == KdlTerm.IDENT ||
-        t.type == KdlTerm.STRING ||
-        t.type == KdlTerm.RAWSTRING) {
+    if (t.type == KdlTerm.ident ||
+        t.type == KdlTerm.string ||
+        t.type == KdlTerm.rawstring) {
       tokenizer.nextToken();
       return t.value;
     }
@@ -92,7 +93,7 @@ class KdlParser {
 
   void wsStar() {
     var t = tokenizer.peekToken();
-    while (t.type == KdlTerm.WS) {
+    while (t.type == KdlTerm.whitespace) {
       tokenizer.nextToken();
       t = tokenizer.peekToken();
     }
@@ -105,7 +106,7 @@ class KdlParser {
   }
 
   bool isLinespace(KdlToken t) {
-    return (t.type == KdlTerm.NEWLINE || t.type == KdlTerm.WS);
+    return (t.type == KdlTerm.newline || t.type == KdlTerm.whitespace);
   }
 
   void argsPropsChildren(KdlNode node) {
@@ -114,20 +115,20 @@ class KdlParser {
     while (true) {
       var peek = tokenizer.peekToken();
       switch (peek.type) {
-        case KdlTerm.WS:
+        case KdlTerm.whitespace:
           wsStar();
           peek = tokenizer.peekToken();
-          if (peek.type == KdlTerm.SLASHDASH) {
+          if (peek.type == KdlTerm.slashdash) {
             slashdash();
             peek = tokenizer.peekToken();
             commented = true;
           }
           switch (peek.type) {
-            case KdlTerm.STRING:
-            case KdlTerm.IDENT:
+            case KdlTerm.string:
+            case KdlTerm.ident:
               if (hasChildren) throw ex("Unexpected ${peek.type}", peek);
               var t = tokenizer.peekTokenAfterNext();
-              if (t.type == KdlTerm.EQUALS) {
+              if (t.type == KdlTerm.equals) {
                 var p = prop();
                 if (!commented) node.properties[p[0]] = p[1];
               } else {
@@ -136,17 +137,17 @@ class KdlParser {
               }
               commented = false;
               break;
-            case KdlTerm.NEWLINE:
-            case KdlTerm.EOF:
-            case KdlTerm.SEMICOLON:
+            case KdlTerm.newline:
+            case KdlTerm.eof:
+            case KdlTerm.semicolon:
               tokenizer.nextToken();
               return;
-            case KdlTerm.LBRACE:
+            case KdlTerm.lbrace:
               lbrace(node, commented);
               hasChildren = true;
               commented = false;
               break;
-            case KdlTerm.RBRACE:
+            case KdlTerm.rbrace:
               rbrace();
               return;
             default:
@@ -157,17 +158,17 @@ class KdlParser {
               break;
           }
           break;
-        case KdlTerm.EOF:
-        case KdlTerm.SEMICOLON:
-        case KdlTerm.NEWLINE:
+        case KdlTerm.eof:
+        case KdlTerm.semicolon:
+        case KdlTerm.newline:
           tokenizer.nextToken();
           return;
-        case KdlTerm.LBRACE:
+        case KdlTerm.lbrace:
           lbrace(node, commented);
           hasChildren = true;
           commented = false;
           break;
-        case KdlTerm.RBRACE:
+        case KdlTerm.rbrace:
           rbrace();
           return;
         default:
@@ -192,16 +193,16 @@ class KdlParser {
 
   prop() {
     var name = identifier();
-    expect(KdlTerm.EQUALS);
+    expect(KdlTerm.equals);
     var val = value();
     return [name, val];
   }
 
   List<KdlNode> children() {
-    expect(KdlTerm.LBRACE);
+    expect(KdlTerm.lbrace);
     var nodes = nodeList();
     linespaceStar();
-    expect(KdlTerm.RBRACE);
+    expect(KdlTerm.rbrace);
     return nodes;
   }
 
@@ -218,20 +219,20 @@ class KdlParser {
 
   KdlValue valueWithoutType(KdlToken t) {
     switch (t.type) {
-      case KdlTerm.IDENT:
-      case KdlTerm.STRING:
-      case KdlTerm.RAWSTRING:
+      case KdlTerm.ident:
+      case KdlTerm.string:
+      case KdlTerm.rawstring:
         return KdlString(t.value);
-      case KdlTerm.INTEGER:
+      case KdlTerm.integer:
         return KdlInt(t.value);
-      case KdlTerm.DECIMAL:
+      case KdlTerm.decimal:
         return KdlBigDecimal(t.value);
-      case KdlTerm.DOUBLE:
+      case KdlTerm.double:
         return KdlDouble(t.value);
-      case KdlTerm.TRUE:
-      case KdlTerm.FALSE:
+      case KdlTerm.trueKeyword:
+      case KdlTerm.falseKeyword:
         return KdlBool(t.value);
-      case KdlTerm.NULL:
+      case KdlTerm.nullKeyword:
         return KdlNull();
       default:
         throw ex("Expected value, got ${t.type}", t);
@@ -239,27 +240,27 @@ class KdlParser {
   }
 
   String? type() {
-    if (tokenizer.peekToken().type != KdlTerm.LPAREN) return null;
-    expect(KdlTerm.LPAREN);
+    if (tokenizer.peekToken().type != KdlTerm.lparen) return null;
+    expect(KdlTerm.lparen);
     wsStar();
     var ty = identifier();
     wsStar();
-    expect(KdlTerm.RPAREN);
+    expect(KdlTerm.rparen);
     wsStar();
     return ty;
   }
 
   void slashdash() {
     var t = tokenizer.nextToken();
-    if (t.type != KdlTerm.SLASHDASH) {
+    if (t.type != KdlTerm.slashdash) {
       throw ex("Expected SLASHDASH, found ${t.type}", t);
     }
     linespaceStar();
     var peek = tokenizer.peekToken();
     switch (peek.type) {
-      case KdlTerm.RBRACE:
-      case KdlTerm.EOF:
-      case KdlTerm.SEMICOLON:
+      case KdlTerm.rbrace:
+      case KdlTerm.eof:
+      case KdlTerm.semicolon:
         throw ex("Unexpected ${peek.type} after SLASHDASH", peek);
       default:
         break;
@@ -271,18 +272,18 @@ class KdlParser {
     if (t.type == type) {
       return tokenizer.nextToken().value;
     } else {
-      throw ex("Expected ${type}, got ${t.type}", t);
+      throw ex("Expected $type, got ${t.type}", t);
     }
   }
 
   void expectEndOfFile() {
     var t = tokenizer.peekToken();
-    if (t.type == KdlTerm.EOF) return;
+    if (t.type == KdlTerm.eof) return;
 
     throw ex("Expected EOF, got ${t.type}", t);
   }
 
-  KdlParseException ex(String message, [KdlToken? token = null]) {
+  KdlParseException ex(String message, [KdlToken? token]) {
     token = token ?? tokenizer.peekToken();
     return KdlParseException(message, token.line, token.column);
   }

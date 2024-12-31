@@ -14,7 +14,7 @@ import "./types/regex.dart";
 import "./types/base64.dart";
 
 class KdlTypes {
-  static Map<String, Function> MAPPING = const {
+  static Map<String, Function> mapping = const {
     'date-time': KdlDateTime.call,
     'time': KdlTime.call,
     'date': KdlDate.call,

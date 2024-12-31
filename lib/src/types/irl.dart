@@ -9,17 +9,17 @@ class KdlIRLReference extends KdlValue<Uri> {
   String? unicodeHash;
 
   KdlIRLReference(
-    Uri value,
+    super.value,
     this.unicodeValue,
     this.unicodeDomain,
     this.unicodePath,
     this.unicodeSearch,
     this.unicodeHash,
-    [String? type]
-  ) : super(value, type);
+    [super.type]
+  );
 
   static call(KdlValue value, [String type = 'irl-reference']) {
-    if (!(value is KdlString)) return null;
+    if (value is! KdlString) return null;
 
     var params = IRLReferenceParser(value.value).parse();
 
@@ -37,25 +37,17 @@ class KdlIRLReference extends KdlValue<Uri> {
 
 class KdlIRL extends KdlIRLReference {
   KdlIRL(
-    Uri value,
-    String unicodeValue,
-    String? unicodeDomain,
-    String? unicodePath,
-    String? unicodeSearch,
-    String? unicodeHash,
-    [String? type]
-  ) : super(
-    value,
-    unicodeValue,
-    unicodeDomain,
-    unicodePath,
-    unicodeSearch,
-    unicodeHash,
-    type
+    super.value,
+    super.unicodeValue,
+    super.unicodeDomain,
+    super.unicodePath,
+    super.unicodeSearch,
+    super.unicodeHash,
+    [super.type]
   );
 
   static call(KdlValue value, [String type = 'irl-reference']) {
-    if (!(value is KdlString)) return null;
+    if (value is! KdlString) return null;
 
     var params = IRLParser(value.value).parse();
 

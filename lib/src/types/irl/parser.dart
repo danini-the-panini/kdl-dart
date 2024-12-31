@@ -3,21 +3,21 @@ import "dart:convert";
 import "../hostname/validator.dart";
 
 class IRLReferenceParser {
-  static final RGX = RegExp(r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$", caseSensitive: false);
-  static final PERCENT_RGX = RegExp(r"%([a-f0-9]{2})", caseSensitive: false);
+  static final rgx = RegExp(r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$", caseSensitive: false);
+  static final percentRgx = RegExp(r"%([a-f0-9]{2})", caseSensitive: false);
 
-  static const RESERVED_URL_CHARS = [
+  static const reservedUrlChars = [
     '!', '#', '&', "'", '(', ')', '*', '+', ',', '/', ':', ';', '=', '?', '@', '[', ']', '%'
   ];
-  static const UNRESERVED_URL_CHARS = [
+  static const unreservedUrlChars = [
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_', '.', '~'
   ];
-  static final URL_CHARS = RESERVED_URL_CHARS + UNRESERVED_URL_CHARS;
+  static final urlChars = reservedUrlChars + unreservedUrlChars;
 
   String string;
-  
+
   IRLReferenceParser(this.string);
 
   parse() {
@@ -29,17 +29,17 @@ class IRLReferenceParser {
     var search = parts[4];
     var hash = parts[5];
 
-    String? unicodeDomain = null;
-    String? unicodePath = null;
-    String? unicodeSearch = null;
-    String? unicodeHash = null;
+    String? unicodeDomain;
+    String? unicodePath;
+    String? unicodeSearch;
+    String? unicodeHash;
 
     if (string.runes.any((rune) => rune > 127)) {
       unicodePath = path;
       path = _encode(unicodePath);
       unicodeSearch = search;
-      var searchParams = unicodeSearch == null ? null : unicodeSearch.split('&').map((x) => x.split('='));
-      search = searchParams == null ? null : searchParams.map((x) => "${_encode(x[0])}=${_encode(x[1])}").join('&');
+      var searchParams = unicodeSearch?.split('&').map((x) => x.split('='));
+      search = searchParams?.map((x) => "${_encode(x[0])}=${_encode(x[1])}").join('&');
       unicodeHash = hash;
       hash = _encode(hash);
     } else {
@@ -70,7 +70,7 @@ class IRLReferenceParser {
   }
 
   List<String?> _parseUrl() {
-    var match = RGX.firstMatch(string);
+    var match = rgx.firstMatch(string);
     if (match == null) throw "invalid IRL $string";
 
     var parts = match.groups([1,2,3,4,5,6]);
@@ -83,7 +83,7 @@ class IRLReferenceParser {
     if (string == null) return true;
 
     return !string.runes.any((rune) =>
-      rune <= 127 && !URL_CHARS.contains(String.fromCharCode(rune)));
+      rune <= 127 && !urlChars.contains(String.fromCharCode(rune)));
   }
 
   static _encode(String? string) {
@@ -128,7 +128,7 @@ class IRLReferenceParser {
 }
 
 class IRLParser extends IRLReferenceParser {
-  IRLParser(String string): super(string);
+  IRLParser(super.string);
 
   @override
   _parseUrl() {

@@ -1,5 +1,5 @@
 // From: https://en.wikipedia.org/wiki/ISO_3166-2#Current_codes
-const Map<String, Map<String, String>> COUNTRY_SUBDIVISIONS = {
+const Map<String, Map<String, String>> countrySubdivisions = {
   "AD": {
     "AD-07": "Andorra la Vella",
     "AD-02": "Canillo",

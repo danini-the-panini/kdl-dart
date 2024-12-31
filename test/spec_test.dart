@@ -9,13 +9,13 @@ void main() {
   KdlParser parser = KdlParser();
 
   var testCasesPath = p.join(Directory.current.path, 'test', 'kdl-org', 'tests', 'test_cases');
-  var inputsDir = new Directory(p.join(testCasesPath, 'input'));
+  var inputsDir = Directory(p.join(testCasesPath, 'input'));
   var expectedPath = p.join(testCasesPath, 'expected_kdl');
   for (var entry in inputsDir.listSync()) {
     if (entry is Directory) continue;
     var inputFile = (entry as File);
     var inputName = p.basenameWithoutExtension(inputFile.path);
-    var expectedFile = new File(p.join(expectedPath, "${inputName}.kdl"));
+    var expectedFile = File(p.join(expectedPath, "$inputName.kdl"));
     if (expectedFile.existsSync()) {
       test("$inputName matches expected output", () async {
         var input = await inputFile.readAsString();

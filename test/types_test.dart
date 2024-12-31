@@ -1,4 +1,3 @@
-
 import 'package:test/test.dart';
 
 import 'package:kdl/kdl.dart';
@@ -20,17 +19,18 @@ import 'package:kdl/src/types/regex.dart';
 import 'package:kdl/src/types/base64.dart';
 
 class Foo extends KdlValue<String> {
-  Foo(String value, [String? type]) : super(value, type);
+  Foo(super.value, [super.type]);
 }
 
 class Bar extends KdlNode {
-  Bar(KdlNode node, [String? type]) : super(
-    node.name,
-    arguments: node.arguments,
-    properties: node.properties,
-    children: node.children,
-    type: type,
-  );
+  Bar(KdlNode node, [String? type])
+      : super(
+          node.name,
+          arguments: node.arguments,
+          properties: node.properties,
+          children: node.children,
+          type: type,
+        );
 }
 
 void main() {
@@ -66,7 +66,8 @@ node (date-time)"2021-01-01T12:12:12" \\
      (uuid)"f81d4fae-7dec-11d0-a765-00a0c91e6bf6" \\
      (regex)"asdf" \\
      (base64)"U2VuZCByZWluZm9yY2VtZW50cw=="
-""".trim());
+"""
+        .trim());
 
     var i = 0;
     expect(doc.nodes[0].arguments[i++], isA<KdlDateTime>());
@@ -97,18 +98,21 @@ node (date-time)"2021-01-01T12:12:12" \\
   test('custom types', () {
     var parsers = {
       'foo': (value, type) {
-        if (!(value is KdlValue)) return null;
+        if (value is! KdlValue) return null;
         return Foo(value.value, type);
       },
       'bar': (node, type) {
-        if (!(node is KdlNode)) return null;
+        if (node is! KdlNode) return null;
         return Bar(node, type);
       },
     };
-    var doc = Kdl.parseDocument("""
+    var doc = KdlDocument.parse(
+        """
 (bar)barnode (foo)"foovalue"
 (foo)foonode (bar)"barvalue"
-""".trim(), typeParsers: parsers);
+"""
+            .trim(),
+        typeParsers: parsers);
 
     expect(doc, isNotNull);
     expect(doc.nodes[0], isA<Bar>());
@@ -118,9 +122,12 @@ node (date-time)"2021-01-01T12:12:12" \\
   });
 
   test('parse false', () {
-    var doc = Kdl.parseDocument("""
+    var doc = KdlDocument.parse(
+        """
 node (date-time)"2021-01-01T12:12:12"
-    """.trim(), parseTypes: false);
+    """
+            .trim(),
+        parseTypes: false);
 
     expect(doc, isNotNull);
     expect(doc.nodes[0].arguments[0], isA<KdlString>());

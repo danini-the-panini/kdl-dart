@@ -19,14 +19,14 @@ class URLTemplate {
 }
 
 enum URLTemplateParserContext {
-  Start,
-  Literal,
-  Expansion,
+  start,
+  literal,
+  expansion,
 }
 
 class URLTemplateParser {
-  static final UNRESERVED = RegExp(r"[a-zA-Z0-9\-._~]");
-  static final RESERVED = RegExp(r"[:/?#\[\]@!$&'()*+,;=]");
+  static final unreserved = RegExp(r"[a-zA-Z0-9\-._~]");
+  static final reserved = RegExp(r"[:/?#\[\]@!$&'()*+,;=]");
 
   String string;
   int index = 0;
@@ -35,7 +35,7 @@ class URLTemplateParser {
 
   URLTemplate parse() {
     List<URLTemplatePart> result = [];
-    URLTemplatePart? token = null;
+    URLTemplatePart? token;
     while ((token = _nextToken()) != null) {
       result.add(token!);
     }
@@ -44,15 +44,15 @@ class URLTemplateParser {
 
   URLTemplatePart? _nextToken() {
     var buffer = '';
-    var context = URLTemplateParserContext.Start;
+    var context = URLTemplateParserContext.start;
     late URLTemplatePart expansion;
     while (true) {
       var c = index < string.length ? string[index] : null;
       switch (context) {
-        case URLTemplateParserContext.Start:
+        case URLTemplateParserContext.start:
           switch (c) {
             case '{':
-              context = URLTemplateParserContext.Expansion;
+              context = URLTemplateParserContext.expansion;
               buffer = '';
               var n = index < string.length - 1 ? string[index + 1] : null;
               switch (n) {
@@ -71,11 +71,11 @@ class URLTemplateParser {
             default:
               buffer = c;
               index++;
-              context = URLTemplateParserContext.Literal;
+              context = URLTemplateParserContext.literal;
               break;
           }
           break;
-        case URLTemplateParserContext.Literal:
+        case URLTemplateParserContext.literal:
           switch (c) {
             case '{': case null: return StringLiteral(buffer);
             default:
@@ -84,7 +84,7 @@ class URLTemplateParser {
               break;
           }
           break;
-        case URLTemplateParserContext.Expansion:
+        case URLTemplateParserContext.expansion:
           switch (c) {
             case '}':
               index++;
@@ -186,10 +186,10 @@ class URLTemplateVariable {
     }
     if (value is Map) {
       var list = [];
-      value.entries.forEach((entry) {
+      for (var entry in value.entries) {
         list.add(entry.key);
         list.add(entry.value);
-      });
+      }
       return _flatten(list);
     }
     if (value is List) {
@@ -197,7 +197,7 @@ class URLTemplateVariable {
       return result.isEmpty ? null : result.join(',');
     }
   }
-  
+
   _encode(value) {
     if (value == null) return null;
 
@@ -205,7 +205,7 @@ class URLTemplateVariable {
     var result = '';
     for (int i = 0; i < string.length; i++) {
       var c = string[i];
-      if (URLTemplateParser.UNRESERVED.hasMatch(c) || (allowReserved && URLTemplateParser.RESERVED.hasMatch(c))) {
+      if (URLTemplateParser.unreserved.hasMatch(c) || (allowReserved && URLTemplateParser.reserved.hasMatch(c))) {
         result += c;
       } else {
         result += IRLReferenceParser.percentEncode(c);
@@ -238,10 +238,10 @@ abstract class URLTemplatePart {
 
   _expandVariables(values) {
     var list = [];
-    variables.forEach((variable) {
+    for (var variable in variables) {
       var expanded = variable.expand(values[variable.name]);
       if (expanded != null) list.addAll(expanded);
-    });
+    }
     return list;
   }
 
@@ -267,7 +267,7 @@ class StringLiteral extends URLTemplatePart {
 }
 
 class StringExpansion extends URLTemplatePart {
-  StringExpansion([List<URLTemplateVariable> variables = const []]) : super(variables);
+  StringExpansion([super.variables]);
 
   @override
   expand(values) {

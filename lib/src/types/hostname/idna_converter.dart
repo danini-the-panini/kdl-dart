@@ -24,9 +24,9 @@
 /// Implementation of IDNA - RFC 3490 standard converter according to <http://www.rfc-base.org/rfc-3490.html>
 ///
 class IDNAConverter {
-  static const INVALID_INPUT = 'Invalid input';
-  static const OVERFLOW = 'Overflow: input needs wider integers to process';
-  static const NOT_BASIC = 'Illegal input >= 0x80 (not a basic code point)';
+  static const invalidInput = 'Invalid input';
+  static const overflow = 'Overflow: input needs wider integers to process';
+  static const notBasic = 'Illegal input >= 0x80 (not a basic code point)';
 
   static const int base = 36;
   static const int tMin = 1;
@@ -85,7 +85,7 @@ class IDNAConverter {
       }
 
       if (m - n > (maxInt - delta) / (h + 1)) {
-        throw ArgumentError(OVERFLOW);
+        throw ArgumentError(overflow);
       }
       delta = delta + (m - n) * (h + 1);
       n = m;
@@ -95,7 +95,7 @@ class IDNAConverter {
         if (c < n) {
           delta++;
           if (0 == delta) {
-            throw ArgumentError(OVERFLOW);
+            throw ArgumentError(overflow);
           }
         }
         if (c == n) {
@@ -145,7 +145,7 @@ class IDNAConverter {
       for (var j = 0; j < d; j++) {
         var c = input.codeUnitAt(j);
         if (!isBasic(c)) {
-          throw ArgumentError(INVALID_INPUT);
+          throw ArgumentError(invalidInput);
         }
         output.add(c);
       }
@@ -160,12 +160,12 @@ class IDNAConverter {
 
       for (var k = base;; k += base) {
         if (d == input.length) {
-          throw ArgumentError(INVALID_INPUT);
+          throw ArgumentError(invalidInput);
         }
         var c = input.codeUnitAt(d++);
         var digit = basicToDigit(c);
         if (digit > (maxInt - i) / w) {
-          throw ArgumentError(OVERFLOW);
+          throw ArgumentError(overflow);
         }
 
         i = i + digit * w;
@@ -187,7 +187,7 @@ class IDNAConverter {
       bias = adapt(i - oldi, output.length + 1, oldi == 0);
 
       if (i / (output.length + 1) > maxInt - n) {
-        throw ArgumentError(OVERFLOW);
+        throw ArgumentError(overflow);
       }
 
       n = (n + i / (output.length + 1)).floor();
@@ -237,7 +237,7 @@ class IDNAConverter {
       // 26..35 : '0'..'9';
       return digit - 26 + '0'.codeUnitAt(0);
     } else {
-      throw ArgumentError(INVALID_INPUT);
+      throw ArgumentError(invalidInput);
     }
   }
 
@@ -256,7 +256,7 @@ class IDNAConverter {
       // 'a'..'z' : 0..25
       return codePoint - 'a'.codeUnitAt(0);
     } else {
-      throw ArgumentError(INVALID_INPUT);
+      throw ArgumentError(invalidInput);
     }
   }
 
@@ -275,44 +275,44 @@ class IDNAConverter {
   }
 
   static String _urlConvert(String url, bool shouldencode) {
-    var _url = <String>[];
-    var _result = <String>[];
+    var url0 = <String>[];
+    var result = <String>[];
     if (regexUrlprefix.hasMatch(url)) {
-      _url = url.split('/');
+      url0 = url.split('/');
     } else {
-      _url.add(url);
+      url0.add(url);
     }
-    _url.forEach((String _suburl) {
-      _suburl = _suburl.replaceAll(regexSeparators, '\x2E');
+    for (var suburl in url0) {
+      suburl = suburl.replaceAll(regexSeparators, '\x2E');
 
-      var _split = _suburl.split('.');
+      var split = suburl.split('.');
 
-      var _join = <String>[];
+      var join = <String>[];
 
-      _split.forEach((elem) {
+      for (var elem in split) {
         // do decode and encode
         if (shouldencode) {
           if (regexPunycode.hasMatch(elem) ||
               regexNonASCII.hasMatch(elem) == false) {
-            _join.add(elem);
+            join.add(elem);
           } else {
-            _join.add('xn--' + encode(elem));
+            join.add('xn--${encode(elem)}');
           }
         } else {
           if (regexNonASCII.hasMatch(elem)) {
-            throw ArgumentError(NOT_BASIC);
+            throw ArgumentError(notBasic);
           } else {
-            _join.add(regexPunycode.hasMatch(elem)
+            join.add(regexPunycode.hasMatch(elem)
                 ? decode(elem.replaceFirst(regexPunycode, ''))
                 : elem);
           }
         }
-      });
-      _result.add(_join.isNotEmpty ? _join.join('.') : _suburl);
-    });
+      }
+      result.add(join.isNotEmpty ? join.join('.') : suburl);
+    }
 
-    return _result.length > 1
-        ? _result.join('/')
-        : _result.elementAt(0);
+    return result.length > 1
+        ? result.join('/')
+        : result.elementAt(0);
   }
 }

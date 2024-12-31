@@ -3,7 +3,7 @@ import 'package:kdl/src/tokenizer.dart';
 class StringDumper {
   String string = '';
 
-  StringDumper(String this.string);
+  StringDumper(this.string);
 
   String dump() {
     if (_isBareIdentifier()) return string;
@@ -32,10 +32,10 @@ class StringDumper {
     }
   }
 
-  static final FORBIDDEN = [
-    ...KdlTokenizer.SYMBOLS.keys.map((e) => e.runes.single),
-    ...KdlTokenizer.WHITESPACE.map((e) => e.runes.single),
-    ...KdlTokenizer.NEWLINES.map((e) => e.runes.single),
+  static final forbidden = [
+    ...KdlTokenizer.symbols.keys.map((e) => e.runes.single),
+    ...KdlTokenizer.whitespace.map((e) => e.runes.single),
+    ...KdlTokenizer.newlines.map((e) => e.runes.single),
     ..."()[]/\\\"#".runes,
     ...List.generate(0x20, (e) => e),
   ];
@@ -60,6 +60,6 @@ class StringDumper {
       return false;
     }
 
-    return !string.runes.any((c) => FORBIDDEN.contains(c));
+    return !string.runes.any((c) => forbidden.contains(c));
   }
 }

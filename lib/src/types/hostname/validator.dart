@@ -1,7 +1,7 @@
-import "./IDNAConverter.dart";
+import "./idna_converter.dart";
 
 class HostnameValidator {
-  static final PART_RGX = RegExp("^[a-z0-9_][a-z0-9_\\-]{0,62}\$", caseSensitive: false);
+  static final partRgx = RegExp("^[a-z0-9_][a-z0-9_\\-]{0,62}\$", caseSensitive: false);
 
   String string;
   String get ascii => string;
@@ -19,7 +19,7 @@ class HostnameValidator {
     if (part.isEmpty) return false;
     if (part.startsWith('-') || part.endsWith('-')) return false;
 
-    return PART_RGX.hasMatch(part);
+    return partRgx.hasMatch(part);
   }
 
   static validator() {
@@ -28,9 +28,10 @@ class HostnameValidator {
 }
 
 class IDNHostnameValidator extends HostnameValidator {
+  @override
   String unicode;
 
-  IDNHostnameValidator.fromAscii(String string) : unicode = IDNAConverter.urlDecode(string), super(string);
+  IDNHostnameValidator.fromAscii(super.string) : unicode = IDNAConverter.urlDecode(string);
   IDNHostnameValidator.fromUnicode(String string) : unicode = string, super(IDNAConverter.urlEncode(string));
 
   factory IDNHostnameValidator(String string) {

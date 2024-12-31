@@ -24,10 +24,10 @@
 import 'package:string_scanner/string_scanner.dart';
 
 enum DurationParsingMode {
-  Start,
-  Sign,
-  Date,
-  Time,
+  start,
+  sign,
+  date,
+  time,
 }
 
 // Parses a string formatted according to ISO 8601 Duration into the hash.
@@ -36,21 +36,21 @@ enum DurationParsingMode {
 //
 // This parser allows negative parts to be present in pattern.
 class ISO8601DurationParser {
-  static final PERIOD_OR_COMMA = RegExp('\.|,/');
-  static const PERIOD = '.';
-  static const COMMA = ',';
+  static final periodOrComma = RegExp('\\.|,');
+  static const period = '.';
+  static const comma = ',';
 
-  static final SIGN_MARKER = RegExp('\\A-|\\+|');
-  static final DATE_MARKER = RegExp('P');
-  static final TIME_MARKER = RegExp('T');
-  static final DATE_COMPONENT = RegExp('(-?\\d+(?:[.,]\\d+)?)(Y|M|D|W)');
-  static final TIME_COMPONENT = RegExp('(-?\\d+(?:[.,]\\d+)?)(H|M|S)');
+  static final signMarker = RegExp('^-|\\+|');
+  static final dateMarker = RegExp('P');
+  static final timeMarker = RegExp('T');
+  static final dateComponent = RegExp('(-?\\d+(?:[.,]\\d+)?)(Y|M|D|W)');
+  static final timeComponent = RegExp('(-?\\d+(?:[.,]\\d+)?)(H|M|S)');
 
-  static const DATE_TO_PART = { 'Y': 'years', 'M': 'months', 'W': 'weeks', 'D': 'days' };
-  static const TIME_TO_PART = { 'H': 'hours', 'M': 'minutes', 'S': 'seconds' };
+  static const dateToPart = { 'Y': 'years', 'M': 'months', 'W': 'weeks', 'D': 'days' };
+  static const timeToPart = { 'H': 'hours', 'M': 'minutes', 'S': 'seconds' };
 
-  static const DATE_COMPONENTS = ['years', 'months', 'days'];
-  static const TIME_COMPONENTS = ['hours', 'minutes', 'seconds'];
+  static const dateComponents = ['years', 'months', 'days'];
+  static const timeComponents = ['hours', 'minutes', 'seconds'];
 
   Map<String, num> parts;
   StringScanner scanner;
@@ -60,39 +60,39 @@ class ISO8601DurationParser {
   ISO8601DurationParser(String string) :
     scanner = StringScanner(string),
     parts = {},
-    mode = DurationParsingMode.Start,
+    mode = DurationParsingMode.start,
     sign = 1;
 
   parse() {
     while (!_isFinished()) {
       switch(mode) {
-      case DurationParsingMode.Start:
-        if (_scan(SIGN_MARKER)) {
+      case DurationParsingMode.start:
+        if (_scan(signMarker)) {
           sign = scanner.lastMatch![0] == '-' ? -1 : 1;
-          mode = DurationParsingMode.Sign;
+          mode = DurationParsingMode.sign;
         } else {
           _raiseParsingError();
         }
         break;
-      case DurationParsingMode.Sign:
-        if (_scan(DATE_MARKER)) {
-          mode = DurationParsingMode.Date;
+      case DurationParsingMode.sign:
+        if (_scan(dateMarker)) {
+          mode = DurationParsingMode.date;
         } else {
           _raiseParsingError();
         }
         break;
-      case DurationParsingMode.Date:
-        if (_scan(TIME_MARKER)) {
-          mode = DurationParsingMode.Time;
-        } else if (_scan(DATE_COMPONENT)) {
-          parts[DATE_TO_PART[scanner.lastMatch![2]!]!] = _number() * sign;
+      case DurationParsingMode.date:
+        if (_scan(timeMarker)) {
+          mode = DurationParsingMode.time;
+        } else if (_scan(dateComponent)) {
+          parts[dateToPart[scanner.lastMatch![2]!]!] = _number() * sign;
         } else {
           _raiseParsingError();
         }
         break;
-      case DurationParsingMode.Time:
-        if (_scan(TIME_COMPONENT)) {
-          parts[TIME_TO_PART[scanner.lastMatch![2]!]!] = _number() * sign;
+      case DurationParsingMode.time:
+        if (_scan(timeComponent)) {
+          parts[timeToPart[scanner.lastMatch![2]!]!] = _number() * sign;
         } else {
           _raiseParsingError();
         }
@@ -105,13 +105,13 @@ class ISO8601DurationParser {
   }
 
   bool _isFinished() {
-    return scanner.rest.length == 0;
+    return scanner.rest.isEmpty;
   }
 
   // Parses number which can be a float with either comma or period.
   num _number() {
-    return (PERIOD_OR_COMMA.hasMatch(scanner.lastMatch![1]!)) ?
-      double.parse(scanner.lastMatch![1]!.replaceAll(COMMA, PERIOD)) :
+    return (periodOrComma.hasMatch(scanner.lastMatch![1]!)) ?
+      double.parse(scanner.lastMatch![1]!.replaceAll(comma, period)) :
       int.parse(scanner.lastMatch![1]!);
   }
 
@@ -128,17 +128,17 @@ class ISO8601DurationParser {
     if (parts.isEmpty) _raiseParsingError('is empty duration');
 
     // Mixing any of Y, M, D with W is invalid.
-    if (parts.containsKey('weeks') && DATE_COMPONENTS.any((e) => parts.containsKey(e))) {
+    if (parts.containsKey('weeks') && dateComponents.any((e) => parts.containsKey(e))) {
       _raiseParsingError('mixing weeks with other date parts not allowed');
     }
 
     // Specifying an empty T part is invalid.
-    if (mode == DurationParsingMode.Time && !TIME_COMPONENTS.any((e) => parts.containsKey(e))) {
+    if (mode == DurationParsingMode.time && !timeComponents.any((e) => parts.containsKey(e))) {
       _raiseParsingError('time part marker is present but time part is empty');
     }
 
     var fractions = parts.values.where((a) => a != 0).where((a) => (a % 1) != 0);
-    if (!fractions.isEmpty && !(fractions.length == 1 && fractions.last == parts.values.where((a) => a != 0).last)) {
+    if (fractions.isNotEmpty && !(fractions.length == 1 && fractions.last == parts.values.where((a) => a != 0).last)) {
       _raiseParsingError('(only last part can be fractional)');
     }
 

@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:kdl/kdl.dart';
 
-typedef T VarArgsCallback<T>(List<dynamic> args);
+typedef VarArgsCallback<T> = T Function(List<dynamic> args);
 
 class VarArgsFunction<T> {
   final VarArgsCallback<T> callback;
@@ -22,10 +22,10 @@ class VarArgsFunction<T> {
 }
 
 main() {
-  KdlNode? currentNode = null;
-  KdlDocument? currentDocument = null;
+  KdlNode? currentNode;
+  KdlDocument? currentDocument;
 
-  dynamic _ = VarArgsFunction((args) {
+  dynamic n = VarArgsFunction((args) {
     var argv = List.from(args);
     var block = () {};
     var kwargs = {};
@@ -47,57 +47,57 @@ main() {
     }
   });
 
-  var nodes = (block) {
+  nodes(block) {
     var doc = KdlDocument([]);
     currentDocument = doc;
     block.call();
     currentDocument = null;
     return doc;
-  };
+  }
 
   test('ci', () async {
-    var string = await new File('./test/v1/kdl-org/examples/ci.kdl').readAsString();
-    var doc = Kdl.parseDocument(string, version: 1);
+    var string = await File('./test/v1/kdl-org/examples/ci.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
     var expectedDoc = nodes(() {
-      _("name", "CI");
-      _("on", "push", "pull_request");
-      _("env", () {
-        _("RUSTFLAGS", "-Dwarnings");
+      n("name", "CI");
+      n("on", "push", "pull_request");
+      n("env", () {
+        n("RUSTFLAGS", "-Dwarnings");
       });
-      _("jobs", () {
-        _("fmt_and_docs", "Check fmt & build docs", () {
-          _("runs-on", "ubuntu-latest");
-          _("steps", () {
-            _("step", { "uses": "actions/checkout@v1" });
-            _("step", "Install Rust", { "uses": "actions-rs/toolchain@v1" }, () {
-              _("profile", "minimal");
-              _("toolchain", "stable");
-              _("components", "rustfmt");
-              _("override", true);
+      n("jobs", () {
+        n("fmt_and_docs", "Check fmt & build docs", () {
+          n("runs-on", "ubuntu-latest");
+          n("steps", () {
+            n("step", { "uses": "actions/checkout@v1" });
+            n("step", "Install Rust", { "uses": "actions-rs/toolchain@v1" }, () {
+              n("profile", "minimal");
+              n("toolchain", "stable");
+              n("components", "rustfmt");
+              n("override", true);
             });
-            _("step", "rustfmt", { "run": "cargo fmt --all -- --check" });
-            _("step", "docs", { "run": "cargo doc --no-deps" });
+            n("step", "rustfmt", { "run": "cargo fmt --all -- --check" });
+            n("step", "docs", { "run": "cargo doc --no-deps" });
           });
         });
-        _("build_and_test", "Build & Test", () {
-          _("runs-on", r"${{ matrix.os }}");
-          _("strategy", () {
-            _("matrix", () {
-              _("rust", "1.46.0", "stable");
-              _("os", "ubuntu-latest", "macOS-latest", "windows-latest");
+        n("build_and_test", "Build & Test", () {
+          n("runs-on", r"${{ matrix.os }}");
+          n("strategy", () {
+            n("matrix", () {
+              n("rust", "1.46.0", "stable");
+              n("os", "ubuntu-latest", "macOS-latest", "windows-latest");
             });
           });
 
-          _("steps", () {
-            _("step", { "uses": "actions/checkout@v1" });
-            _("step", "Install Rust", { "uses": "actions-rs/toolchain@v1" }, () {
-              _("profile", "minimal");
-              _("toolchain", r"${{ matrix.rust }}");
-              _("components", "clippy");
-              _("override", true);
+          n("steps", () {
+            n("step", { "uses": "actions/checkout@v1" });
+            n("step", "Install Rust", { "uses": "actions-rs/toolchain@v1" }, () {
+              n("profile", "minimal");
+              n("toolchain", r"${{ matrix.rust }}");
+              n("components", "clippy");
+              n("override", true);
             });
-            _("step", "Clippy", { "run": "cargo clippy --all -- -D warnings" });
-            _("step", "Run tests", { "run": "cargo test --all --verbose" });
+            n("step", "Clippy", { "run": "cargo clippy --all -- -D warnings" });
+            n("step", "Run tests", { "run": "cargo test --all --verbose" });
           });
         });
       });
@@ -107,20 +107,20 @@ main() {
   });
 
   test('cargo', () async {
-    var string = await new File('./test/v1/kdl-org/examples/Cargo.kdl').readAsString();
-    var doc = Kdl.parseDocument(string, version: 1);
+    var string = await File('./test/v1/kdl-org/examples/Cargo.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
     var expectedDoc = nodes(() {
-      _("package", () {
-        _("name", "kdl");
-        _("version", "0.0.0");
-        _("description", "kat's document language");
-        _("authors", "Kat Marchán <kzm@zkat.tech>");
-        _("license-file", "LICENSE.md");
-        _("edition", "2018");
+      n("package", () {
+        n("name", "kdl");
+        n("version", "0.0.0");
+        n("description", "kat's document language");
+        n("authors", "Kat Marchán <kzm@zkat.tech>");
+        n("license-file", "LICENSE.md");
+        n("edition", "2018");
       });
-      _("dependencies", () {
-        _("nom", "6.0.1");
-        _("thiserror", "1.0.22");
+      n("dependencies", () {
+        n("nom", "6.0.1");
+        n("thiserror", "1.0.22");
       });
     });
 
@@ -128,22 +128,22 @@ main() {
   });
 
   test('nuget', () async {
-    var string = await new File('./test/v1/kdl-org/examples/nuget.kdl').readAsString();
-    var doc = Kdl.parseDocument(string, version: 1);
+    var string = await File('./test/v1/kdl-org/examples/nuget.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });
 
   test('kdl-schema', () async {
-    var string = await new File('./test/v1/kdl-org/examples/kdl-schema.kdl').readAsString();
-    var doc = Kdl.parseDocument(string, version: 1);
+    var string = await File('./test/v1/kdl-org/examples/kdl-schema.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });
 
   test('website', () async {
-    var string = await new File('./test/v1/kdl-org/examples/website.kdl').readAsString();
-    var doc = Kdl.parseDocument(string, version: 1);
+    var string = await File('./test/v1/kdl-org/examples/website.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });

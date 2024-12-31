@@ -1,11 +1,11 @@
 import "../hostname/validator.dart";
 
 enum EmailParserContext {
-  Start,
-  AfterDot,
-  AfterPart,
-  AfterAt,
-  AfterDomain
+  start,
+  afterDot,
+  afterPart,
+  afterAt,
+  afterDomain
 }
 
 class EmailParser {
@@ -20,59 +20,59 @@ class EmailParser {
     String local = '';
     late String unicodeDomain;
     late String domain;
-    var context = EmailParserContext.Start;
-    
+    var context = EmailParserContext.start;
+
     while (true) {
       var token = tokenizer.nextToken();
 
       switch (token.type) {
-        case EmailTokenType.Part:
+        case EmailTokenType.emailPart:
           switch (context) {
-            case EmailParserContext.Start:
-            case EmailParserContext.AfterDot:
+            case EmailParserContext.start:
+            case EmailParserContext.afterDot:
               local += token.value;
-              context = EmailParserContext.AfterPart;
+              context = EmailParserContext.afterPart;
               break;
             default:
               throw "invalid email $string (unexpected part ${token.value} at $context)";
           }
           break;
-        case EmailTokenType.Dot:
+        case EmailTokenType.dot:
           switch (context) {
-            case EmailParserContext.AfterPart:
+            case EmailParserContext.afterPart:
               local += token.value;
-              context = EmailParserContext.AfterDot;
+              context = EmailParserContext.afterDot;
               break;
             default:
               throw "invalid email $string (unexpected dot at $context)";
           }
           break;
-        case EmailTokenType.At:
+        case EmailTokenType.at:
           switch (context) {
-            case EmailParserContext.AfterPart:
-              context = EmailParserContext.AfterAt;
+            case EmailParserContext.afterPart:
+              context = EmailParserContext.afterAt;
               break;
             default:
               throw "invalid email $string (unexpected dot at $context)";
           }
           break;
-        case EmailTokenType.Domain:
+        case EmailTokenType.domain:
           switch (context) {
-            case EmailParserContext.AfterAt:
+            case EmailParserContext.afterAt:
               var validator = idn ? IDNHostnameValidator(token.value) : HostnameValidator(token.value);
               if (!validator.isValid()) throw "invalid hostname ${token.value}";
 
               unicodeDomain = validator.unicode;
               domain = validator.ascii;
-              context = EmailParserContext.AfterDomain;
+              context = EmailParserContext.afterDomain;
               break;
             default:
               throw "invalid email $string (unexpected domain at $context)";
           }
           break;
-        case EmailTokenType.End:
+        case EmailTokenType.end:
           switch (context) {
-            case EmailParserContext.AfterDomain:
+            case EmailParserContext.afterDomain:
               if (local.length > 64) {
                 throw "invalid email $string (local part length ${local.length} exceeds maximum of 64)";
               }
@@ -87,11 +87,11 @@ class EmailParser {
 }
 
 enum EmailTokenType {
-  Part,
-  Dot,
-  At,
-  Domain,
-  End,
+  emailPart,
+  dot,
+  at,
+  domain,
+  end,
 }
 
 class EmailToken {
@@ -105,14 +105,14 @@ class EmailToken {
 }
 
 enum EmailTokenizerContext {
-  Start,
-  Part,
-  Quote,
+  start,
+  emailPart,
+  quote,
 }
 
 class EmailTokenizer {
-  static final LOCAL_PART_ASCII = RegExp(r"[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]");
-  static final LOCAL_PART_IDN = RegExp(r"""[^\x00-\x1f\s".@]""");
+  static final localPartAscii = RegExp(r"[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]");
+  static final localPartIdn = RegExp(r"""[^\x00-\x1f\s".@]""");
 
   String string;
   bool idn;
@@ -134,34 +134,34 @@ class EmailTokenizer {
       if (index < _length(string)) {
         var domainStart = index;
         index = _length(string);
-        return EmailToken(EmailTokenType.Domain, _substring(domainStart));
+        return EmailToken(EmailTokenType.domain, _substring(domainStart));
       } else {
-        return EmailToken(EmailTokenType.End, '');
+        return EmailToken(EmailTokenType.end, '');
       }
     }
-    var context = EmailTokenizerContext.Start;
+    var context = EmailTokenizerContext.start;
     var buffer = '';
     while (true) {
-      if (index >= _length(string)) return EmailToken(EmailTokenType.End, '');
+      if (index >= _length(string)) return EmailToken(EmailTokenType.end, '');
       var c = _charAt(index);
 
       switch (context) {
-      case EmailTokenizerContext.Start:
+      case EmailTokenizerContext.start:
         switch (c) {
         case '.':
           index++;
-          return EmailToken(EmailTokenType.Dot, '.');
+          return EmailToken(EmailTokenType.dot, '.');
         case '@':
           afterAt = true;
           index++;
-          return EmailToken(EmailTokenType.At, '@');
+          return EmailToken(EmailTokenType.at, '@');
         case '"':
-          context = EmailTokenizerContext.Quote;
+          context = EmailTokenizerContext.quote;
           index++;
           break;
         default:
           if (_localPartChars().hasMatch(c)) {
-            context = EmailTokenizerContext.Part;
+            context = EmailTokenizerContext.emailPart;
             buffer += c;
             index++;
             break;
@@ -169,17 +169,17 @@ class EmailTokenizer {
           throw "invalid email $string, (unexpected $c)";
         }
         break;
-      case EmailTokenizerContext.Part:
+      case EmailTokenizerContext.emailPart:
         if (_localPartChars().hasMatch(c)) {
           buffer += c;
           index++;
         } else if (c == '.' || c == '@') {
-          return EmailToken(EmailTokenType.Part, buffer);
+          return EmailToken(EmailTokenType.emailPart, buffer);
         } else {
           throw "invalid email $string (unexpected $c)";
         }
         break;
-      case EmailTokenizerContext.Quote:
+      case EmailTokenizerContext.quote:
         if (c == '"') {
           var n = _charAt(index + 1);
           if (n != '.' && n != '@') {
@@ -187,7 +187,7 @@ class EmailTokenizer {
           }
 
           index++;
-          return EmailToken(EmailTokenType.Part, buffer);
+          return EmailToken(EmailTokenType.emailPart, buffer);
         } else {
           buffer += c;
           index += 1;
@@ -197,7 +197,7 @@ class EmailTokenizer {
     }
   }
 
-  RegExp _localPartChars() => idn ? LOCAL_PART_IDN : LOCAL_PART_ASCII;
+  RegExp _localPartChars() => idn ? localPartIdn : localPartAscii;
 
   String _charAt(int i) => String.fromCharCode(string.runes.elementAt(i));
 }

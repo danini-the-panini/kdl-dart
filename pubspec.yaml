@@ -1,6 +1,6 @@
 name: kdl
 version: 1.0.1
-description: Dart implementation of the KDL Document Language
+description: KDL is a small, pleasant document language with XML-like node semantics that looks like you're invoking a bunch of CLI commands!
 repository: https://github.com/danini-the-panini/kdl-dart
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -10,3 +10,4 @@ dependencies:
 dev_dependencies:
   test: ^1.25.2
   path: ^1.9.0
+  lints: ^5.1.1

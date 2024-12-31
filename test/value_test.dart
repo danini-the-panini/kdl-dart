@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 
-import '../lib/src/document.dart';
+import 'package:kdl/src/document.dart';
 
 void main() {
   test('equals', () {
