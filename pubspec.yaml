@@ -3,7 +3,7 @@ version: 1.0.1
 description: Dart implementation of the KDL Document Language
 repository: https://github.com/danini-the-panini/kdl-dart
 environment:
-  sdk: ">=3.0.0 < 4.0.0"
+  sdk: ">=3.0.0 <4.0.0"
 dependencies:
   big_decimal: ^0.5.0
   string_scanner: ^1.2.0
