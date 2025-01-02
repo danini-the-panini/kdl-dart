@@ -27,7 +27,8 @@ class KdlIdnHostname extends KdlHostname {
       : super(value, type);
 
   /// Convert a `KdlString` into a `KdlIDNHostname`
-  static KdlIdnHostname? convert(KdlValue value, [String type = 'idn-hostname']) {
+  static KdlIdnHostname? convert(KdlValue value,
+      [String type = 'idn-hostname']) {
     if (value is! KdlString) return null;
     var validator = IdnHostnameValidator(value.value);
     if (!validator.isValid()) throw "invalid hostname ${value.value}";
