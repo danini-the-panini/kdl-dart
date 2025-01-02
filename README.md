@@ -1,5 +1,6 @@
 # KDL
 
+[![Pub Version](https://img.shields.io/pub/v/kdl)](https://pub.dev/packages/kdl)
 [![Actions Status](https://github.com/danini-the-panini/kdl-dart/workflows/Dart/badge.svg)](https://github.com/jellymann/kdl-dart/actions)
 
 This is a Dart implementation of the [KDL Document Language](https://kdl.dev)
