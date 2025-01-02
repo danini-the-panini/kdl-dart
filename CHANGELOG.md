@@ -1,3 +1,7 @@
+## v2.0.0 (2025-01-02)
+
+- KDL 2.0.0 spec compliant
+
 ## v1.0.1 (2024-12-16)
 
 - Fix incorrect parsing of signed hex/oct/bin
