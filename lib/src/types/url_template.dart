@@ -7,7 +7,8 @@ class KdlUrlTemplate extends KdlValue<UrlTemplate> {
   KdlUrlTemplate(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlURLTemplate`
-  static KdlUrlTemplate? convert(KdlValue value, [String type = 'url-emplate']) {
+  static KdlUrlTemplate? convert(KdlValue value,
+      [String type = 'url-emplate']) {
     if (value is! KdlString) return null;
 
     var template = UrlTemplateParser(value.value).parse();
