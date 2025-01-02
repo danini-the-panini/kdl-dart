@@ -1,11 +1,14 @@
 import "../document.dart";
 import "./hostname/validator.dart";
 
+/// RFC1132 internet hostname (only ASCII segments)
 class KdlHostname extends KdlValue<String> {
-  KdlHostname(String value, [String? type]) : super(value, type);
+  /// Construct a new `KdlHostname`
+  KdlHostname(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'hostname']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlHostname`
+  static KdlHostname? convert(KdlValue value, [String type = 'hostname']) {
+    if (value is! KdlString) return null;
     var validator = HostnameValidator(value.value);
     if (!validator.isValid()) throw "invalid hostname ${value.value}";
 
@@ -13,16 +16,22 @@ class KdlHostname extends KdlValue<String> {
   }
 }
 
-class KdlIDNHostname extends KdlHostname {
+/// RFC5890 internationalized internet hostname
+/// (only `xn--`-prefixed ASCII "punycode" segments, or non-ASCII segments)
+class KdlIdnHostname extends KdlHostname {
+  /// Unicode value
   String unicodeValue;
 
-  KdlIDNHostname(String value, this.unicodeValue, [String? type]) : super(value, type);
+  /// Construct a new `KdlIDNHostname`
+  KdlIdnHostname(String value, this.unicodeValue, [String? type])
+      : super(value, type);
 
-  static call(KdlValue value, [String type = 'idn-hostname']) {
-    if (!(value is KdlString)) return null;
-    var validator = IDNHostnameValidator(value.value);
+  /// Convert a `KdlString` into a `KdlIDNHostname`
+  static KdlIdnHostname? convert(KdlValue value, [String type = 'idn-hostname']) {
+    if (value is! KdlString) return null;
+    var validator = IdnHostnameValidator(value.value);
     if (!validator.isValid()) throw "invalid hostname ${value.value}";
 
-    return KdlIDNHostname(validator.ascii, validator.unicode, type);
+    return KdlIdnHostname(validator.ascii, validator.unicode, type);
   }
 }

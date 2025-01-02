@@ -1,16 +1,20 @@
 import "../document.dart";
 import "./url_template/parser.dart";
 
-class KdlURLTemplate extends KdlValue<URLTemplate> {
-  KdlURLTemplate(URLTemplate value, [String? type]) : super(value, type);
+/// RFC6570 URI Template.
+class KdlUrlTemplate extends KdlValue<UrlTemplate> {
+  /// Construct a new `KdlURLTemplate`
+  KdlUrlTemplate(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'url-emplate']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlURLTemplate`
+  static KdlUrlTemplate? convert(KdlValue value, [String type = 'url-emplate']) {
+    if (value is! KdlString) return null;
 
-    var template = URLTemplateParser(value.value).parse();
+    var template = UrlTemplateParser(value.value).parse();
 
-    return KdlURLTemplate(template, type);
+    return KdlUrlTemplate(template, type);
   }
 
+  /// Expand the template into a Uri using the given values
   Uri expand(values) => value.expand(values);
 }

@@ -23,38 +23,38 @@
 ///
 /// Implementation of IDNA - RFC 3490 standard converter according to <http://www.rfc-base.org/rfc-3490.html>
 ///
-class IDNAConverter {
-  static const INVALID_INPUT = 'Invalid input';
-  static const OVERFLOW = 'Overflow: input needs wider integers to process';
-  static const NOT_BASIC = 'Illegal input >= 0x80 (not a basic code point)';
+class IdnaConverter {
+  static const _invalidInput = 'Invalid input';
+  static const _overflow = 'Overflow: input needs wider integers to process';
+  static const _notBasic = 'Illegal input >= 0x80 (not a basic code point)';
 
-  static const int base = 36;
-  static const int tMin = 1;
-  static const int tMax = 26;
+  static const int _base = 36;
+  static const int _tMin = 1;
+  static const int _tMax = 26;
 
-  static const int skew = 38;
-  static const int damp = 700;
+  static const int _skew = 38;
+  static const int _damp = 700;
 
-  static const int initialBias = 72;
-  static const int initialN = 128; // 0x80
-  static const delimiter = '-'; // '\x2D'
+  static const int _initialBias = 72;
+  static const int _initialN = 128; // 0x80
+  static const _delimiter = '-'; // '\x2D'
 
   /// Highest positive signed 32-bit float value
-  static const maxInt = 2147483647; // aka. 0x7FFFFFFF or 2^31-1
+  static const _maxInt = 2147483647; // aka. 0x7FFFFFFF or 2^31-1
 
-  static RegExp regexPunycode = RegExp(r'^xn--');
-  static RegExp regexNonASCII = RegExp(r'[^\0-\x7E]'); // non-ASCII chars
-  static RegExp regexSeparators =
+  static final RegExp _regexPunycode = RegExp(r'^xn--');
+  static final RegExp _regexNonASCII = RegExp(r'[^\0-\x7E]'); // non-ASCII chars
+  static final RegExp _regexSeparators =
       RegExp(r'[\u002E\u3002\uFF0E\uFF61]'); // RFC 3490 separators
-  static RegExp regexUrlprefix = RegExp(r'^http://|^https://');
+  static final RegExp _regexUrlprefix = RegExp(r'^http://|^https://');
 
   ///
   /// Converts a string that contains unicode symbols to a string with only ASCII symbols.
   ///
   static String encode(String input) {
-    var n = initialN;
+    var n = _initialN;
     var delta = 0;
-    var bias = initialBias;
+    var bias = _initialBias;
     var output = <int>[];
 
     // Copy all basic code points to the output
@@ -69,12 +69,12 @@ class IDNAConverter {
 
     // Append delimiter
     if (b > 0) {
-      output.add(delimiter.codeUnitAt(0));
+      output.add(_delimiter.codeUnitAt(0));
     }
 
     var h = b;
     while (h < input.length) {
-      var m = maxInt;
+      var m = _maxInt;
 
       // Find the minimum code point >= n
       for (var i = 0; i < input.length; i++) {
@@ -84,8 +84,8 @@ class IDNAConverter {
         }
       }
 
-      if (m - n > (maxInt - delta) / (h + 1)) {
-        throw ArgumentError(OVERFLOW);
+      if (m - n > (_maxInt - delta) / (h + 1)) {
+        throw ArgumentError(_overflow);
       }
       delta = delta + (m - n) * (h + 1);
       n = m;
@@ -95,30 +95,30 @@ class IDNAConverter {
         if (c < n) {
           delta++;
           if (0 == delta) {
-            throw ArgumentError(OVERFLOW);
+            throw ArgumentError(_overflow);
           }
         }
         if (c == n) {
           var q = delta;
 
-          for (var k = base;; k += base) {
+          for (var k = _base;; k += _base) {
             int t;
             if (k <= bias) {
-              t = tMin;
-            } else if (k >= bias + tMax) {
-              t = tMax;
+              t = _tMin;
+            } else if (k >= bias + _tMax) {
+              t = _tMax;
             } else {
               t = k - bias;
             }
             if (q < t) {
               break;
             }
-            output.add((digitToBasic(t + (q - t) % (base - t))));
-            q = ((q - t) / (base - t)).floor();
+            output.add((digitToBasic(t + (q - t) % (_base - t))));
+            q = ((q - t) / (_base - t)).floor();
           }
 
           output.add(digitToBasic(q));
-          bias = adapt(delta, h + 1, h == b);
+          bias = _adapt(delta, h + 1, h == b);
           delta = 0;
           h++;
         }
@@ -135,17 +135,17 @@ class IDNAConverter {
   /// Decode a ASCII string to the corresponding unicode string.
   ///
   static String decode(String input) {
-    var n = initialN;
+    var n = _initialN;
     var i = 0;
-    var bias = initialBias;
+    var bias = _initialBias;
     var output = <int>[];
 
-    var d = input.lastIndexOf(delimiter);
+    var d = input.lastIndexOf(_delimiter);
     if (d > 0) {
       for (var j = 0; j < d; j++) {
         var c = input.codeUnitAt(j);
         if (!isBasic(c)) {
-          throw ArgumentError(INVALID_INPUT);
+          throw ArgumentError(_invalidInput);
         }
         output.add(c);
       }
@@ -158,36 +158,36 @@ class IDNAConverter {
       var oldi = i;
       var w = 1;
 
-      for (var k = base;; k += base) {
+      for (var k = _base;; k += _base) {
         if (d == input.length) {
-          throw ArgumentError(INVALID_INPUT);
+          throw ArgumentError(_invalidInput);
         }
         var c = input.codeUnitAt(d++);
         var digit = basicToDigit(c);
-        if (digit > (maxInt - i) / w) {
-          throw ArgumentError(OVERFLOW);
+        if (digit > (_maxInt - i) / w) {
+          throw ArgumentError(_overflow);
         }
 
         i = i + digit * w;
 
         int t;
         if (k <= bias) {
-          t = tMin;
-        } else if (k >= bias + tMax) {
-          t = tMax;
+          t = _tMin;
+        } else if (k >= bias + _tMax) {
+          t = _tMax;
         } else {
           t = k - bias;
         }
         if (digit < t) {
           break;
         }
-        w = w * (base - t);
+        w = w * (_base - t);
       }
 
-      bias = adapt(i - oldi, output.length + 1, oldi == 0);
+      bias = _adapt(i - oldi, output.length + 1, oldi == 0);
 
-      if (i / (output.length + 1) > maxInt - n) {
-        throw ArgumentError(OVERFLOW);
+      if (i / (output.length + 1) > _maxInt - n) {
+        throw ArgumentError(_overflow);
       }
 
       n = (n + i / (output.length + 1)).floor();
@@ -199,9 +199,9 @@ class IDNAConverter {
     return String.fromCharCodes(output);
   }
 
-  static int adapt(int delta, int numpoints, bool first) {
+  static int _adapt(int delta, int numpoints, bool first) {
     if (first) {
-      delta = (delta / damp).floor();
+      delta = (delta / _damp).floor();
     } else {
       delta = (delta / 2).floor();
     }
@@ -209,12 +209,12 @@ class IDNAConverter {
     delta = delta + (delta / numpoints).floor();
 
     var k = 0;
-    while (delta > ((base - tMin) * tMax) / 2) {
-      delta = (delta / (base - tMin)).floor();
-      k = k + base;
+    while (delta > ((_base - _tMin) * _tMax) / 2) {
+      delta = (delta / (_base - _tMin)).floor();
+      k = k + _base;
     }
 
-    return (k + ((base - tMin + 1) * delta) / (delta + skew)).floor();
+    return (k + ((_base - _tMin + 1) * delta) / (delta + _skew)).floor();
   }
 
   ///
@@ -237,7 +237,7 @@ class IDNAConverter {
       // 26..35 : '0'..'9';
       return digit - 26 + '0'.codeUnitAt(0);
     } else {
-      throw ArgumentError(INVALID_INPUT);
+      throw ArgumentError(_invalidInput);
     }
   }
 
@@ -256,7 +256,7 @@ class IDNAConverter {
       // 'a'..'z' : 0..25
       return codePoint - 'a'.codeUnitAt(0);
     } else {
-      throw ArgumentError(INVALID_INPUT);
+      throw ArgumentError(_invalidInput);
     }
   }
 
@@ -275,44 +275,42 @@ class IDNAConverter {
   }
 
   static String _urlConvert(String url, bool shouldencode) {
-    var _url = <String>[];
-    var _result = <String>[];
-    if (regexUrlprefix.hasMatch(url)) {
-      _url = url.split('/');
+    var url0 = <String>[];
+    var result = <String>[];
+    if (_regexUrlprefix.hasMatch(url)) {
+      url0 = url.split('/');
     } else {
-      _url.add(url);
+      url0.add(url);
     }
-    _url.forEach((String _suburl) {
-      _suburl = _suburl.replaceAll(regexSeparators, '\x2E');
+    for (var suburl in url0) {
+      suburl = suburl.replaceAll(_regexSeparators, '\x2E');
 
-      var _split = _suburl.split('.');
+      var split = suburl.split('.');
 
-      var _join = <String>[];
+      var join = <String>[];
 
-      _split.forEach((elem) {
+      for (var elem in split) {
         // do decode and encode
         if (shouldencode) {
-          if (regexPunycode.hasMatch(elem) ||
-              regexNonASCII.hasMatch(elem) == false) {
-            _join.add(elem);
+          if (_regexPunycode.hasMatch(elem) ||
+              _regexNonASCII.hasMatch(elem) == false) {
+            join.add(elem);
           } else {
-            _join.add('xn--' + encode(elem));
+            join.add('xn--${encode(elem)}');
           }
         } else {
-          if (regexNonASCII.hasMatch(elem)) {
-            throw ArgumentError(NOT_BASIC);
+          if (_regexNonASCII.hasMatch(elem)) {
+            throw ArgumentError(_notBasic);
           } else {
-            _join.add(regexPunycode.hasMatch(elem)
-                ? decode(elem.replaceFirst(regexPunycode, ''))
+            join.add(_regexPunycode.hasMatch(elem)
+                ? decode(elem.replaceFirst(_regexPunycode, ''))
                 : elem);
           }
         }
-      });
-      _result.add(_join.isNotEmpty ? _join.join('.') : _suburl);
-    });
+      }
+      result.add(join.isNotEmpty ? join.join('.') : suburl);
+    }
 
-    return _result.length > 1
-        ? _result.join('/')
-        : _result.elementAt(0);
+    return result.length > 1 ? result.join('/') : result.elementAt(0);
   }
 }

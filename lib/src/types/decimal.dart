@@ -2,11 +2,14 @@ import 'package:big_decimal/big_decimal.dart';
 
 import "../document.dart";
 
+/// IEEE 754-2008 decimal string format.
 class KdlDecimal extends KdlValue<BigDecimal> {
-  KdlDecimal(BigDecimal value, [String? type]) : super(value, type);
+  /// Construct a new `KdlDecimal`
+  KdlDecimal(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'decimal']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlDecimal`
+  static KdlDecimal? convert(KdlValue value, [String type = 'decimal']) {
+    if (value is! KdlString) return null;
 
     return KdlDecimal(BigDecimal.parse(value.value), type);
   }

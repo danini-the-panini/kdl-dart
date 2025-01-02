@@ -1,44 +1,58 @@
-import "./IDNAConverter.dart";
+import "./idna_converter.dart";
 
+/// Validates hostnames
 class HostnameValidator {
-  static final PART_RGX = RegExp("^[a-z0-9_][a-z0-9_\\-]{0,62}\$", caseSensitive: false);
+  static final _partRgx =
+      RegExp("^[a-z0-9_][a-z0-9_\\-]{0,62}\$", caseSensitive: false);
 
-  String string;
-  String get ascii => string;
-  String get unicode => string;
+  final String _string;
 
-  HostnameValidator(this.string);
+  /// ASCII Hostname value
+  String get ascii => _string;
 
+  /// Unicode hostname value
+  String get unicode => _string;
+
+  /// Construct a new `HostnameValidator` to validate the given string
+  HostnameValidator(this._string);
+
+  /// Return true if the string is a valid hostname
   bool isValid() {
-    if (string.length > 253) return false;
+    if (_string.length > 253) return false;
 
-    return !string.split('.').any((part) => !_validPart(part));
+    return !_string.split('.').any((part) => !_validPart(part));
   }
 
   bool _validPart(String part) {
     if (part.isEmpty) return false;
     if (part.startsWith('-') || part.endsWith('-')) return false;
 
-    return PART_RGX.hasMatch(part);
-  }
-
-  static validator() {
-
+    return _partRgx.hasMatch(part);
   }
 }
 
-class IDNHostnameValidator extends HostnameValidator {
+/// Hostname validator for Internationalized Domain Names
+class IdnHostnameValidator extends HostnameValidator {
+  @override
   String unicode;
 
-  IDNHostnameValidator.fromAscii(String string) : unicode = IDNAConverter.urlDecode(string), super(string);
-  IDNHostnameValidator.fromUnicode(String string) : unicode = string, super(IDNAConverter.urlEncode(string));
+  /// Validate an ASCII IDN Hostname
+  IdnHostnameValidator.fromAscii(super.string)
+      : unicode = IdnaConverter.urlDecode(string);
 
-  factory IDNHostnameValidator(String string) {
+  /// Validate a Unicode IDN Hostname
+  IdnHostnameValidator.fromUnicode(String string)
+      : unicode = string,
+        super(IdnaConverter.urlEncode(string));
+
+  /// Constructs the appropriate IDN Hostname Validator depending on if the
+  /// hostname is in ASCII or Unicode format
+  factory IdnHostnameValidator(String string) {
     var isAscii = string.split('.').any((x) => x.startsWith('xn--'));
     if (isAscii) {
-      return IDNHostnameValidator.fromAscii(string);
+      return IdnHostnameValidator.fromAscii(string);
     } else {
-      return IDNHostnameValidator.fromUnicode(string);
+      return IdnHostnameValidator.fromUnicode(string);
     }
   }
 }

@@ -56,8 +56,8 @@ main() {
   }
 
   test('ci', () async {
-    var string = await File('./test/kdl-org/examples/ci.kdl').readAsString();
-    var doc = KdlDocument.parse(string);
+    var string = await File('./test/v1/kdl-org/examples/ci.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
     var expectedDoc = nodes(() {
       n("name", "CI");
       n("on", "push", "pull_request");
@@ -75,8 +75,8 @@ main() {
               n("components", "rustfmt");
               n("override", true);
             });
-            n("step", "rustfmt", () { n("run", "cargo", "fmt", "--all", "--", "--check"); });
-            n("step", "docs", () { n("run", "cargo", "doc", "--no-deps"); });
+            n("step", "rustfmt", { "run": "cargo fmt --all -- --check" });
+            n("step", "docs", { "run": "cargo doc --no-deps" });
           });
         });
         n("build_and_test", "Build & Test", () {
@@ -96,9 +96,8 @@ main() {
               n("components", "clippy");
               n("override", true);
             });
-            n("step", "Clippy", () { n("run", "cargo", "clippy", "--all", "--", "-D", "warnings"); });
-            n("step", "Run tests", () { n("run", "cargo", "test", "--all", "--verbose"); });
-            n("step", "Other Stuff", { "run": "  echo foo\n  echo bar\n  echo baz" });
+            n("step", "Clippy", { "run": "cargo clippy --all -- -D warnings" });
+            n("step", "Run tests", { "run": "cargo test --all --verbose" });
           });
         });
       });
@@ -108,13 +107,13 @@ main() {
   });
 
   test('cargo', () async {
-    var string = await File('./test/kdl-org/examples/Cargo.kdl').readAsString();
-    var doc = KdlDocument.parse(string);
+    var string = await File('./test/v1/kdl-org/examples/Cargo.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
     var expectedDoc = nodes(() {
       n("package", () {
         n("name", "kdl");
         n("version", "0.0.0");
-        n("description", "The kdl document language");
+        n("description", "kat's document language");
         n("authors", "Kat Marchán <kzm@zkat.tech>");
         n("license-file", "LICENSE.md");
         n("edition", "2018");
@@ -129,22 +128,22 @@ main() {
   });
 
   test('nuget', () async {
-    var string = await File('./test/kdl-org/examples/nuget.kdl').readAsString();
-    var doc = KdlDocument.parse(string);
+    var string = await File('./test/v1/kdl-org/examples/nuget.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });
 
   test('kdl-schema', () async {
-    var string = await File('./test/kdl-org/examples/kdl-schema.kdl').readAsString();
-    var doc = KdlDocument.parse(string);
+    var string = await File('./test/v1/kdl-org/examples/kdl-schema.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });
 
   test('website', () async {
-    var string = await File('./test/kdl-org/examples/website.kdl').readAsString();
-    var doc = KdlDocument.parse(string);
+    var string = await File('./test/v1/kdl-org/examples/website.kdl').readAsString();
+    var doc = KdlDocument.parse(string, version: 1);
 
     expect(doc, isNotNull);
   });

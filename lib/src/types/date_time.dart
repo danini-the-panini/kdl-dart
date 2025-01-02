@@ -1,20 +1,26 @@
 import "../document.dart";
 
+/// ISO8601 date/time format.
 class KdlDateTime extends KdlValue<DateTime> {
-  KdlDateTime(DateTime value, [String? type]) : super(value, type);
+  /// Construct a new `KdlDateTime`
+  KdlDateTime(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'date-time']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlDateTime`
+  static KdlDateTime? convert(KdlValue value, [String type = 'date-time']) {
+    if (value is! KdlString) return null;
 
     return KdlDateTime(DateTime.parse(value.value), type);
   }
 }
 
+/// "Time" section of ISO8601.
 class KdlTime extends KdlDateTime {
-  KdlTime(DateTime value, [String? type]) : super(value, type);
+  /// Construct a new `KdlTime`
+  KdlTime(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'time']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlTime`
+  static KdlTime? convert(KdlValue value, [String type = 'time']) {
+    if (value is! KdlString) return null;
 
     var time = value.value;
     if (!time.startsWith('T')) time = "T$time";
@@ -24,11 +30,14 @@ class KdlTime extends KdlDateTime {
   }
 }
 
+/// "Date" section of ISO8601.
 class KdlDate extends KdlDateTime {
-  KdlDate(DateTime value, [String? type]) : super(value, type);
+  /// Construct a new `KdlDate`
+  KdlDate(super.value, [super.type]);
 
-  static call(KdlValue value, [String type = 'date']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlDate`
+  static KdlDate? convert(KdlValue value, [String type = 'date']) {
+    if (value is! KdlString) return null;
 
     return KdlDate(DateTime.parse(value.value), type);
   }

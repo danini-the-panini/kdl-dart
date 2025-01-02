@@ -1,72 +1,64 @@
 import "../document.dart";
 import "./irl/parser.dart";
 
-class KdlIRLReference extends KdlValue<Uri> {
+/// RFC3987 Internationalized Resource Identifier.
+class KdlIRL extends KdlValue<Uri> {
+  /// Unicode value
   String unicodeValue;
+
+  /// Unicode domain
   String? unicodeDomain;
+
+  /// Unicode path
   String? unicodePath;
+
+  /// Unicode search query
   String? unicodeSearch;
+
+  /// Unicode hash value
   String? unicodeHash;
 
-  KdlIRLReference(
-    Uri value,
-    this.unicodeValue,
-    this.unicodeDomain,
-    this.unicodePath,
-    this.unicodeSearch,
-    this.unicodeHash,
-    [String? type]
-  ) : super(value, type);
+  /// Construct a new `KdlIRL`
+  KdlIRL(super.value, this.unicodeValue, this.unicodeDomain, this.unicodePath,
+      this.unicodeSearch, this.unicodeHash,
+      [super.type]);
 
-  static call(KdlValue value, [String type = 'irl-reference']) {
-    if (!(value is KdlString)) return null;
+  KdlIRL._from(Irl value, [String? type])
+      : this(
+            Uri.parse(value.asciiValue),
+            value.unicodeValue,
+            value.unicodeDomain,
+            value.unicodePath,
+            value.unicodeSearch,
+            value.unicodeHash,
+            type);
 
-    var params = IRLReferenceParser(value.value).parse();
+  /// Converts a `KdlString` into a `KdlIRL`
+  static KdlIRL? convert(KdlValue value, [String type = 'irl']) {
+    if (value is! KdlString) return null;
 
-    return KdlIRLReference(
-      Uri.parse(params[0]),
-      params[1],
-      params[2],
-      params[3],
-      params[4],
-      params[5],
-      type,
-    );
+    var irl = IrlParser(value.value, isReference: false).parse();
+
+    return KdlIRL._from(irl, type);
   }
 }
 
-class KdlIRL extends KdlIRLReference {
-  KdlIRL(
-    Uri value,
-    String unicodeValue,
-    String? unicodeDomain,
-    String? unicodePath,
-    String? unicodeSearch,
-    String? unicodeHash,
-    [String? type]
-  ) : super(
-    value,
-    unicodeValue,
-    unicodeDomain,
-    unicodePath,
-    unicodeSearch,
-    unicodeHash,
-    type
-  );
+/// RFC3987 Internationalized Resource Identifier Reference.
+class KdlIrlReference extends KdlIRL {
+  /// Constructs a new `KdlIRLReference`
+  KdlIrlReference(super.value, super.unicodeValue, super.unicodeDomain,
+      super.unicodePath, super.unicodeSearch, super.unicodeHash,
+      [super.type]);
 
-  static call(KdlValue value, [String type = 'irl-reference']) {
-    if (!(value is KdlString)) return null;
+  KdlIrlReference._from(super.value, [super.type]) : super._from();
 
-    var params = IRLParser(value.value).parse();
+  /// Converts a `KdlString` into a `KdlIRLReference`
+  static KdlIrlReference? convert(KdlValue value,
+      [String type = 'irl-reference']) {
+    if (value is! KdlString) return null;
 
-    return KdlIRL(
-      Uri.parse(params[0]),
-      params[1],
-      params[2],
-      params[3],
-      params[4],
-      params[5],
-      type,
-    );
+    var irl = IrlParser(value.value).parse();
+
+    return KdlIrlReference._from(irl, type);
   }
 }

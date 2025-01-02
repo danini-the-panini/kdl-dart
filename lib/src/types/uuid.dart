@@ -1,15 +1,19 @@
 import "../document.dart";
 
-class KdlUUID extends KdlValue<String> {
-  KdlUUID(String value, [String? type]) : super(value, type);
-  static final _RGX = RegExp(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
+/// RFC4122 UUID.
+class KdlUuid extends KdlValue<String> {
+  /// Consutrct a new `KdlUUID`
+  KdlUuid(super.value, [super.type]);
+  static final _regexp =
+      RegExp(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$");
 
-  static call(KdlValue value, [String type = 'uuid']) {
-    if (!(value is KdlString)) return null;
+  /// Convert a `KdlString` into a `KdlUUID`
+  static KdlUuid? convert(KdlValue value, [String type = 'uuid']) {
+    if (value is! KdlString) return null;
 
     String uuid = value.value.toLowerCase();
-    if (!_RGX.hasMatch(uuid)) throw "${value.value} is not a valid uuid";
+    if (!_regexp.hasMatch(uuid)) throw "${value.value} is not a valid uuid";
 
-    return KdlUUID(uuid, type);
+    return KdlUuid(uuid, type);
   }
 }

@@ -5,9 +5,9 @@ import 'package:kdl/src/types/regex.dart';
 
 void main() {
   test('regex', () {
-    expect(KdlRegex.call(KdlString('asdf')).value,
+    expect(KdlRegex.convert(KdlString('asdf'))!.value,
       equals(RegExp('asdf')));
 
-    expect(() => KdlRegex.call(KdlString('invalid(regex]')), throwsA(anything));
+    expect(() => KdlRegex.convert(KdlString('invalid(regex]')), throwsA(anything));
   });
 }
