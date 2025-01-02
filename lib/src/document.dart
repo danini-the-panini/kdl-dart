@@ -25,10 +25,9 @@ class KdlDocument with IterableMixin<KdlNode> {
   /// By default, attempts to parse v2 syntax, and falls back to v1 if that
   /// fails. You can override this behaviour by explicitely passing `version`.
   ///
-  /// By default, parses well-known types as specified by [KdlTypes.mapping].
+  /// By default, parses well-known types as specified by [defaultValueTypes].
   /// You can turn this off by passing `parseTypes: false`. You can also add
-  /// your own custom types by passing `typeParsers`, which should be a map of
-  /// type name to a function that converts a KdlValue or KdlNode.
+  /// your own custom types by passing `valueTypes` and `nodeTypes`.
   static KdlDocument parse(String string,
       {int? version,
       Map<String, KdlTypeParser<KdlValue>> valueTypes = const {},
@@ -121,7 +120,8 @@ class KdlDocument with IterableMixin<KdlNode> {
   }
 }
 
-/// Function signature for converting KdlValue and KdlNode into custom types
+/// Function signature for converting `KdlValue` and `KdlNode` into custom types.
+/// Return `null` to skip parsing and keep the original value.
 typedef KdlTypeParser<T> = T? Function(T, String type);
 
 /// A KDL node. Nodes can have positional arguments, key=value properties, and

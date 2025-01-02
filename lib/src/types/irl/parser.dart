@@ -3,7 +3,7 @@ import "dart:convert";
 import "../hostname/validator.dart";
 
 /// RFC3987 Internationalized Resource Identifier.
-class IRL {
+class Irl {
   /// ASCII punycode value
   String asciiValue;
 
@@ -23,7 +23,7 @@ class IRL {
   String? unicodeHash;
 
   /// Construct a new IRL
-  IRL(this.asciiValue, this.unicodeValue,
+  Irl(this.asciiValue, this.unicodeValue,
       [this.unicodeDomain,
       this.unicodePath,
       this.unicodeSearch,
@@ -31,7 +31,7 @@ class IRL {
 }
 
 /// Parses a string into an IRL
-class IRLParser {
+class IrlParser {
   static final _rgx = RegExp(
       r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$",
       caseSensitive: false);
@@ -132,10 +132,10 @@ class IRLParser {
   /// Construct a new parser to parse the given string
   /// pass `isReference: false` to validate this as a full IRL
   /// (i.e. has a scheme)
-  IRLParser(this._string, {isReference = true}) : _isReference = isReference;
+  IrlParser(this._string, {isReference = true}) : _isReference = isReference;
 
   /// Parse the string into an IRL
-  IRL parse() {
+  Irl parse() {
     List<String?> parts = _parseUrl();
     var scheme = parts[0];
     if (!_isReference && (scheme == null || scheme.isEmpty)) {
@@ -169,7 +169,7 @@ class IRLParser {
     }
 
     if (domain != null) {
-      var validator = IDNHostnameValidator(domain);
+      var validator = IdnHostnameValidator(domain);
       domain = validator.ascii;
       unicodeDomain = validator.unicode;
     } else {
@@ -180,7 +180,7 @@ class IRLParser {
         scheme, auth, unicodeDomain, unicodePath, unicodeSearch, unicodeHash);
     var asciiValue = _buildUriString(scheme, auth, domain, path, search, hash);
 
-    return IRL(asciiValue, unicodeValue, unicodeDomain, unicodePath,
+    return Irl(asciiValue, unicodeValue, unicodeDomain, unicodePath,
         unicodeSearch, unicodeHash);
   }
 

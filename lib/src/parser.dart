@@ -5,6 +5,33 @@ import 'package:kdl/src/exception.dart';
 
 /// KDL 2.0.0 Parser
 class KdlParser {
+  /// Default KDLValue types for well-known types
+  static const Map<String, KdlTypeParser<KdlValue>> defaultValueTypes = {
+    'date-time': KdlDateTime.convert,
+    'time': KdlTime.convert,
+    'date': KdlDate.convert,
+    'duration': KdlDuration.convert,
+    'decimal': KdlDecimal.convert,
+    'currency': KdlCurrency.convert,
+    'country-2': KdlCountry2.convert,
+    'country-3': KdlCountry3.convert,
+    'country-subdivision': KdlCountrySubdivision.convert,
+    'email': KdlEmail.convert,
+    'idn-email': KdlIdnEmail.convert,
+    'hostname': KdlHostname.convert,
+    'idn-hostname': KdlIdnHostname.convert,
+    'ipv4': KdlIPV4.convert,
+    'ipv6': KdlIPV6.convert,
+    'url': KdlUrl.convert,
+    'url-reference': KdlUrlReference.convert,
+    'irl': KdlIRL.convert,
+    'irl-reference': KdlIrlReference.convert,
+    'url-template': KdlUrlTemplate.convert,
+    'uuid': KdlUuid.convert,
+    'regex': KdlRegex.convert,
+    'base64': KdlBase64.convert,
+  };
+
   late KdlTokenizer _tokenizer;
   Map<String, KdlTypeParser<KdlValue>> _valueTypes = {};
   Map<String, KdlTypeParser<KdlNode>> _nodeTypes = {};
@@ -22,7 +49,7 @@ class KdlParser {
     _checkVersion();
 
     if (parseTypes) {
-      _valueTypes = {...defaultValueTypeParsers, ...valueTypes};
+      _valueTypes = {...defaultValueTypes, ...valueTypes};
       _nodeTypes = nodeTypes;
     }
 

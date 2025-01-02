@@ -7,7 +7,7 @@ class KdlHostname extends KdlValue<String> {
   KdlHostname(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlHostname`
-  static KdlHostname? call(KdlValue value, [String type = 'hostname']) {
+  static KdlHostname? convert(KdlValue value, [String type = 'hostname']) {
     if (value is! KdlString) return null;
     var validator = HostnameValidator(value.value);
     if (!validator.isValid()) throw "invalid hostname ${value.value}";
@@ -18,20 +18,20 @@ class KdlHostname extends KdlValue<String> {
 
 /// RFC5890 internationalized internet hostname
 /// (only `xn--`-prefixed ASCII "punycode" segments, or non-ASCII segments)
-class KdlIDNHostname extends KdlHostname {
+class KdlIdnHostname extends KdlHostname {
   /// Unicode value
   String unicodeValue;
 
   /// Construct a new `KdlIDNHostname`
-  KdlIDNHostname(String value, this.unicodeValue, [String? type])
+  KdlIdnHostname(String value, this.unicodeValue, [String? type])
       : super(value, type);
 
   /// Convert a `KdlString` into a `KdlIDNHostname`
-  static KdlIDNHostname? call(KdlValue value, [String type = 'idn-hostname']) {
+  static KdlIdnHostname? convert(KdlValue value, [String type = 'idn-hostname']) {
     if (value is! KdlString) return null;
-    var validator = IDNHostnameValidator(value.value);
+    var validator = IdnHostnameValidator(value.value);
     if (!validator.isValid()) throw "invalid hostname ${value.value}";
 
-    return KdlIDNHostname(validator.ascii, validator.unicode, type);
+    return KdlIdnHostname(validator.ascii, validator.unicode, type);
   }
 }

@@ -7,7 +7,7 @@ class KdlCurrency extends KdlValue<Currency> {
   KdlCurrency(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlCurrency`
-  static KdlCurrency? call(KdlValue value, [String type = 'currency']) {
+  static KdlCurrency? convert(KdlValue value, [String type = 'currency']) {
     if (value is! KdlString) return null;
 
     var currency = Currency.currencies[value.value];

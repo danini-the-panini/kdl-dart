@@ -23,7 +23,7 @@
 ///
 /// Implementation of IDNA - RFC 3490 standard converter according to <http://www.rfc-base.org/rfc-3490.html>
 ///
-class IDNAConverter {
+class IdnaConverter {
   static const _invalidInput = 'Invalid input';
   static const _overflow = 'Overflow: input needs wider integers to process';
   static const _notBasic = 'Illegal input >= 0x80 (not a basic code point)';

@@ -35,7 +35,7 @@ enum _DurationParsingMode {
 /// See {ISO 8601}[https://en.wikipedia.org/wiki/ISO_8601#Durations] for more information.
 ///
 /// This parser allows negative parts to be present in pattern.
-class ISO8601DurationParser {
+class Iso8601DurationParser {
   static final _periodOrComma = RegExp('\\.|,');
   static const _period = '.';
   static const _comma = ',';
@@ -63,7 +63,7 @@ class ISO8601DurationParser {
   int _sign;
 
   /// Construct a new parser to parse the given string
-  ISO8601DurationParser(String string)
+  Iso8601DurationParser(String string)
       : _scanner = StringScanner(string),
         _parts = {},
         _mode = _DurationParsingMode.start,

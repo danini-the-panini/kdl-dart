@@ -14,7 +14,7 @@ class KdlCountry2 extends KdlCountry {
   KdlCountry2(super.value, [super.type]);
 
   /// Convert a `KdlString` into `KdlCountry2`
-  static KdlCountry2? call(KdlValue value, [String type = 'country2']) {
+  static KdlCountry2? convert(KdlValue value, [String type = 'country2']) {
     if (value is! KdlString) return null;
 
     var country = Country.countries2[value.value];
@@ -30,7 +30,7 @@ class KdlCountry3 extends KdlCountry {
   KdlCountry3(super.value, [super.type]);
 
   /// Convert a `KdlString` into `KdlCountry3`
-  static KdlCountry3? call(KdlValue value, [String type = 'country3']) {
+  static KdlCountry3? convert(KdlValue value, [String type = 'country3']) {
     if (value is! KdlString) return null;
 
     var country = Country.countries3[value.value];
@@ -52,7 +52,7 @@ class KdlCountrySubdivision extends KdlValue<String> {
   KdlCountrySubdivision(super.value, this.name, this.country, [super.type]);
 
   /// Convert a `KdlString` into a `KdlCountrySubdivision`
-  static KdlCountrySubdivision? call(KdlValue value,
+  static KdlCountrySubdivision? convert(KdlValue value,
       [String type = 'country-subdivision']) {
     if (value is! KdlString) return null;
 

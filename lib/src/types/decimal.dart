@@ -8,7 +8,7 @@ class KdlDecimal extends KdlValue<BigDecimal> {
   KdlDecimal(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlDecimal`
-  static KdlDecimal? call(KdlValue value, [String type = 'decimal']) {
+  static KdlDecimal? convert(KdlValue value, [String type = 'decimal']) {
     if (value is! KdlString) return null;
 
     return KdlDecimal(BigDecimal.parse(value.value), type);

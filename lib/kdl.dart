@@ -3,3 +3,4 @@ library;
 
 export 'src/document.dart';
 export 'src/exception.dart';
+export 'src/types.dart';

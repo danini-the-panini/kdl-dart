@@ -6,7 +6,7 @@ class KdlDateTime extends KdlValue<DateTime> {
   KdlDateTime(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlDateTime`
-  static KdlDateTime? call(KdlValue value, [String type = 'date-time']) {
+  static KdlDateTime? convert(KdlValue value, [String type = 'date-time']) {
     if (value is! KdlString) return null;
 
     return KdlDateTime(DateTime.parse(value.value), type);
@@ -19,7 +19,7 @@ class KdlTime extends KdlDateTime {
   KdlTime(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlTime`
-  static KdlTime? call(KdlValue value, [String type = 'time']) {
+  static KdlTime? convert(KdlValue value, [String type = 'time']) {
     if (value is! KdlString) return null;
 
     var time = value.value;
@@ -36,7 +36,7 @@ class KdlDate extends KdlDateTime {
   KdlDate(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlDate`
-  static KdlDate? call(KdlValue value, [String type = 'date']) {
+  static KdlDate? convert(KdlValue value, [String type = 'date']) {
     if (value is! KdlString) return null;
 
     return KdlDate(DateTime.parse(value.value), type);

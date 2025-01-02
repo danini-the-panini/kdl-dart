@@ -14,7 +14,7 @@ class KdlEmail extends KdlValue<String> {
   KdlEmail(super.value, this.local, this.domain, [super.type]);
 
   /// Convert a `KdlString` into a `KdlEmail`
-  static KdlEmail? call(KdlValue value, [String type = 'email']) {
+  static KdlEmail? convert(KdlValue value, [String type = 'email']) {
     if (value is! KdlString) return null;
 
     var parts = _EmailParser(value.value).parse();
@@ -24,7 +24,7 @@ class KdlEmail extends KdlValue<String> {
 }
 
 /// RFC6531 internationalized email address.
-class KdlIDNEmail extends KdlEmail {
+class KdlIdnEmail extends KdlEmail {
   /// Unicode value
   String unicodeValue;
 
@@ -32,17 +32,17 @@ class KdlIDNEmail extends KdlEmail {
   String unicodeDomain;
 
   /// Construct a new `KdlIDNEmail`
-  KdlIDNEmail(super.value, this.unicodeValue, super.local, super.domain,
+  KdlIdnEmail(super.value, this.unicodeValue, super.local, super.domain,
       this.unicodeDomain,
       [super.type]);
 
   /// Convert a `KdlString` into a `KdlIDNEmail`
-  static KdlIDNEmail? call(KdlValue value, [String type = 'idn-email']) {
+  static KdlIdnEmail? convert(KdlValue value, [String type = 'idn-email']) {
     if (value is! KdlString) return null;
 
     var parts = _EmailParser(value.value, idn: true).parse();
 
-    return KdlIDNEmail("${parts[0]}@${parts[1]}", "${parts[0]}@${parts[2]}",
+    return KdlIdnEmail("${parts[0]}@${parts[1]}", "${parts[0]}@${parts[2]}",
         parts[0], parts[1], parts[2], type);
   }
 }
@@ -102,7 +102,7 @@ class _EmailParser {
           switch (context) {
             case _EmailParserContext.afterAt:
               var validator = _idn
-                  ? IDNHostnameValidator(token.value)
+                  ? IdnHostnameValidator(token.value)
                   : HostnameValidator(token.value);
               if (!validator.isValid()) throw "invalid hostname ${token.value}";
 

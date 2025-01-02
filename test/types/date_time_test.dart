@@ -5,30 +5,30 @@ import 'package:kdl/src/types/date_time.dart';
 
 void main() {
   test('date time', () {
-    expect(KdlDateTime.call(KdlString('2011-10-05T22:26:12-04:00'))!.value,
+    expect(KdlDateTime.convert(KdlString('2011-10-05T22:26:12-04:00'))!.value,
       equals(DateTime.parse('2011-10-05T22:26:12-04:00')));
 
-    expect(() => KdlDateTime.call(KdlString('not a date time')), throwsA(anything));
+    expect(() => KdlDateTime.convert(KdlString('not a date time')), throwsA(anything));
   });
 
   test('time', () {
     var today = DateTime.now().toString().split(' ')[0];
-    expect(KdlTime.call(KdlString('22:26:12'))!.value,
+    expect(KdlTime.convert(KdlString('22:26:12'))!.value,
       equals(DateTime.parse("${today}T22:26:12")));
-    expect(KdlTime.call(KdlString('T22:26:12Z'))!.value,
+    expect(KdlTime.convert(KdlString('T22:26:12Z'))!.value,
       equals(DateTime.parse("${today}T22:26:12Z")));
-    expect(KdlTime.call(KdlString('22:26:12.000Z'))!.value,
+    expect(KdlTime.convert(KdlString('22:26:12.000Z'))!.value,
       equals(DateTime.parse("${today}T22:26:12Z")));
-    expect(KdlTime.call(KdlString('22:26:12-04:00'))!.value,
+    expect(KdlTime.convert(KdlString('22:26:12-04:00'))!.value,
       equals(DateTime.parse("${today}T22:26:12-04:00")));
 
-    expect(() => KdlTime.call(KdlString('not a time')), throwsA(anything));
+    expect(() => KdlTime.convert(KdlString('not a time')), throwsA(anything));
   });
 
   test('date', () {
-    expect(KdlDate.call(KdlString('2011-10-05'))!.value,
+    expect(KdlDate.convert(KdlString('2011-10-05'))!.value,
       equals(DateTime.parse('2011-10-05')));
 
-    expect(() => KdlDate.call(KdlString('not a date')), throwsA(anything));
+    expect(() => KdlDate.convert(KdlString('not a date')), throwsA(anything));
   });
 }

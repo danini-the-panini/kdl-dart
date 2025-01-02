@@ -32,27 +32,27 @@ class HostnameValidator {
 }
 
 /// Hostname validator for Internationalized Domain Names
-class IDNHostnameValidator extends HostnameValidator {
+class IdnHostnameValidator extends HostnameValidator {
   @override
   String unicode;
 
   /// Validate an ASCII IDN Hostname
-  IDNHostnameValidator.fromAscii(super.string)
-      : unicode = IDNAConverter.urlDecode(string);
+  IdnHostnameValidator.fromAscii(super.string)
+      : unicode = IdnaConverter.urlDecode(string);
 
   /// Validate a Unicode IDN Hostname
-  IDNHostnameValidator.fromUnicode(String string)
+  IdnHostnameValidator.fromUnicode(String string)
       : unicode = string,
-        super(IDNAConverter.urlEncode(string));
+        super(IdnaConverter.urlEncode(string));
 
   /// Constructs the appropriate IDN Hostname Validator depending on if the
   /// hostname is in ASCII or Unicode format
-  factory IDNHostnameValidator(String string) {
+  factory IdnHostnameValidator(String string) {
     var isAscii = string.split('.').any((x) => x.startsWith('xn--'));
     if (isAscii) {
-      return IDNHostnameValidator.fromAscii(string);
+      return IdnHostnameValidator.fromAscii(string);
     } else {
-      return IDNHostnameValidator.fromUnicode(string);
+      return IdnHostnameValidator.fromUnicode(string);
     }
   }
 }

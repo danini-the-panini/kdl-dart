@@ -23,7 +23,7 @@ class KdlIRL extends KdlValue<Uri> {
       this.unicodeSearch, this.unicodeHash,
       [super.type]);
 
-  KdlIRL._from(IRL value, [String? type])
+  KdlIRL._from(Irl value, [String? type])
       : this(
             Uri.parse(value.asciiValue),
             value.unicodeValue,
@@ -34,31 +34,31 @@ class KdlIRL extends KdlValue<Uri> {
             type);
 
   /// Converts a `KdlString` into a `KdlIRL`
-  static KdlIRL? call(KdlValue value, [String type = 'irl']) {
+  static KdlIRL? convert(KdlValue value, [String type = 'irl']) {
     if (value is! KdlString) return null;
 
-    var irl = IRLParser(value.value, isReference: false).parse();
+    var irl = IrlParser(value.value, isReference: false).parse();
 
     return KdlIRL._from(irl, type);
   }
 }
 
 /// RFC3987 Internationalized Resource Identifier Reference.
-class KdlIRLReference extends KdlIRL {
+class KdlIrlReference extends KdlIRL {
   /// Constructs a new `KdlIRLReference`
-  KdlIRLReference(super.value, super.unicodeValue, super.unicodeDomain,
+  KdlIrlReference(super.value, super.unicodeValue, super.unicodeDomain,
       super.unicodePath, super.unicodeSearch, super.unicodeHash,
       [super.type]);
 
-  KdlIRLReference._from(super.value, [super.type]) : super._from();
+  KdlIrlReference._from(super.value, [super.type]) : super._from();
 
   /// Converts a `KdlString` into a `KdlIRLReference`
-  static KdlIRLReference? call(KdlValue value,
+  static KdlIrlReference? convert(KdlValue value,
       [String type = 'irl-reference']) {
     if (value is! KdlString) return null;
 
-    var irl = IRLParser(value.value).parse();
+    var irl = IrlParser(value.value).parse();
 
-    return KdlIRLReference._from(irl, type);
+    return KdlIrlReference._from(irl, type);
   }
 }

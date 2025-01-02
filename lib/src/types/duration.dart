@@ -2,7 +2,7 @@ import "../document.dart";
 import "./duration/iso8601_parser.dart";
 
 /// Represents a ISO8601 duration
-class ISODuration {
+class Duration {
   /// Number of years
   num years;
 
@@ -25,7 +25,7 @@ class ISODuration {
   num seconds;
 
   /// Construct a new duration, defaulting to 0 seconds
-  ISODuration({
+  Duration({
     this.years = 0,
     this.months = 0,
     this.weeks = 0,
@@ -36,7 +36,7 @@ class ISODuration {
   });
 
   /// Construct a new duration from a map of parts
-  ISODuration.fromParts(Map<String, num> parts)
+  Duration.fromParts(Map<String, num> parts)
       : years = parts['years'] ?? 0,
         months = parts['months'] ?? 0,
         weeks = parts['weeks'] ?? 0,
@@ -47,7 +47,7 @@ class ISODuration {
 
   @override
   bool operator ==(other) =>
-      other is ISODuration &&
+      other is Duration &&
       other.years == years &&
       other.months == months &&
       other.weeks == weeks &&
@@ -66,16 +66,16 @@ class ISODuration {
 }
 
 /// ISO8601 duration format.
-class KdlDuration extends KdlValue<ISODuration> {
+class KdlDuration extends KdlValue<Duration> {
   /// Construct a new `KdlDuration`
   KdlDuration(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlDuration`
-  static KdlDuration? call(KdlValue value, [String type = 'duration']) {
+  static KdlDuration? convert(KdlValue value, [String type = 'duration']) {
     if (value is! KdlString) return null;
 
-    var parts = ISO8601DurationParser(value.value).parse();
+    var parts = Iso8601DurationParser(value.value).parse();
 
-    return KdlDuration(ISODuration.fromParts(parts), type);
+    return KdlDuration(Duration.fromParts(parts), type);
   }
 }

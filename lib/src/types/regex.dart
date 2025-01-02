@@ -6,7 +6,7 @@ class KdlRegex extends KdlValue<RegExp> {
   KdlRegex(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlRegex`
-  static KdlRegex? call(KdlValue value, [String type = 'regex']) {
+  static KdlRegex? convert(KdlValue value, [String type = 'regex']) {
     if (value is! KdlString) return null;
 
     return KdlRegex(RegExp(value.value), type);

@@ -51,7 +51,7 @@ class KdlIPV4 extends KdlIP {
   KdlIPV4(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlIPV4`
-  static KdlIPV4? call(KdlValue value, [String type = 'ipv4']) {
+  static KdlIPV4? convert(KdlValue value, [String type = 'ipv4']) {
     if (value is! KdlString) return null;
     var addr = value.value;
 
@@ -141,7 +141,7 @@ class KdlIPV6 extends KdlIP {
   KdlIPV6(super.value, [super.type]);
 
   /// Convert a `KdlString` into a `KdlIPV6`
-  static KdlIPV6? call(KdlValue value, [String type = 'ipv6']) {
+  static KdlIPV6? convert(KdlValue value, [String type = 'ipv6']) {
     if (value is! KdlString) return null;
     var addr = value.value;
 

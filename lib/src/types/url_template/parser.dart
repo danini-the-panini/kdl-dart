@@ -3,16 +3,16 @@ import "dart:math";
 import "../irl/parser.dart";
 
 /// RFC6570 URI Template.
-class URLTemplate {
-  final List<_URLTemplatePart> _parts;
+class UrlTemplate {
+  final List<_UrlTemplatePart> _parts;
 
   /// Construct a new URL template with the given parts
-  URLTemplate(this._parts);
+  UrlTemplate(this._parts);
 
   /// Expand the template into a Uri with the given values
   Uri expand(values) {
     var result = _parts.map((p) => p._expand(values)).join();
-    var parser = IRLParser(result);
+    var parser = IrlParser(result);
     return Uri.parse(parser.parse().asciiValue);
   }
 
@@ -20,14 +20,14 @@ class URLTemplate {
   String toString() => _parts.map((p) => p.toString()).join();
 }
 
-enum _URLTemplateParserContext {
+enum _UrlTemplateParserContext {
   start,
   literal,
   expansion,
 }
 
 /// Parses a string into a URLTemplate
-class URLTemplateParser {
+class UrlTemplateParser {
   static final _unreserved = RegExp(r"[a-zA-Z0-9\-._~]");
   static final _reserved = RegExp(r"[:/?#\[\]@!$&'()*+,;=]");
 
@@ -35,29 +35,29 @@ class URLTemplateParser {
   int _index = 0;
 
   /// Construct a new URL template parser for parsing the given string
-  URLTemplateParser(this._string);
+  UrlTemplateParser(this._string);
 
   /// Parse the string into a URL template
-  URLTemplate parse() {
-    List<_URLTemplatePart> result = [];
-    _URLTemplatePart? token;
+  UrlTemplate parse() {
+    List<_UrlTemplatePart> result = [];
+    _UrlTemplatePart? token;
     while ((token = _nextToken()) != null) {
       result.add(token!);
     }
-    return URLTemplate(result);
+    return UrlTemplate(result);
   }
 
-  _URLTemplatePart? _nextToken() {
+  _UrlTemplatePart? _nextToken() {
     var buffer = '';
-    var context = _URLTemplateParserContext.start;
-    late _URLTemplatePart expansion;
+    var context = _UrlTemplateParserContext.start;
+    late _UrlTemplatePart expansion;
     while (true) {
       var c = _index < _string.length ? _string[_index] : null;
       switch (context) {
-        case _URLTemplateParserContext.start:
+        case _UrlTemplateParserContext.start:
           switch (c) {
             case '{':
-              context = _URLTemplateParserContext.expansion;
+              context = _UrlTemplateParserContext.expansion;
               buffer = '';
               var n = _index < _string.length - 1 ? _string[_index + 1] : null;
               switch (n) {
@@ -93,11 +93,11 @@ class URLTemplateParser {
             default:
               buffer = c;
               _index++;
-              context = _URLTemplateParserContext.literal;
+              context = _UrlTemplateParserContext.literal;
               break;
           }
           break;
-        case _URLTemplateParserContext.literal:
+        case _UrlTemplateParserContext.literal:
           switch (c) {
             case '{':
             case null:
@@ -108,7 +108,7 @@ class URLTemplateParser {
               break;
           }
           break;
-        case _URLTemplateParserContext.expansion:
+        case _UrlTemplateParserContext.expansion:
           switch (c) {
             case '}':
               _index++;
@@ -126,11 +126,11 @@ class URLTemplateParser {
     }
   }
 
-  void _parseVariables(String string, _URLTemplatePart part) {
+  void _parseVariables(String string, _UrlTemplatePart part) {
     part._variables = string.split(',').map((str) {
       var match = RegExp(r"^(.*)\*$").firstMatch(str);
       if (match != null) {
-        return _URLTemplateVariable(
+        return _UrlTemplateVariable(
           match[1]!,
           explode: true,
           allowReserved: part._allowReserved,
@@ -140,7 +140,7 @@ class URLTemplateParser {
       }
       match = RegExp(r"^(.*):(\d+)$").firstMatch(str);
       if (match != null) {
-        return _URLTemplateVariable(
+        return _UrlTemplateVariable(
           match[1]!,
           limit: int.parse(match[2]!),
           allowReserved: part._allowReserved,
@@ -148,7 +148,7 @@ class URLTemplateParser {
           keepEmpties: part._keepEmpties,
         );
       }
-      return _URLTemplateVariable(
+      return _UrlTemplateVariable(
         str,
         allowReserved: part._allowReserved,
         withName: part._withName,
@@ -158,7 +158,7 @@ class URLTemplateParser {
   }
 }
 
-class _URLTemplateVariable {
+class _UrlTemplateVariable {
   String name;
   int? limit;
   bool explode;
@@ -166,7 +166,7 @@ class _URLTemplateVariable {
   bool withName;
   bool keepEmpties;
 
-  _URLTemplateVariable(this.name,
+  _UrlTemplateVariable(this.name,
       {this.limit,
       this.explode = false,
       this.allowReserved = false,
@@ -228,11 +228,11 @@ class _URLTemplateVariable {
     var result = '';
     for (int i = 0; i < string.length; i++) {
       var c = string[i];
-      if (URLTemplateParser._unreserved.hasMatch(c) ||
-          (allowReserved && URLTemplateParser._reserved.hasMatch(c))) {
+      if (UrlTemplateParser._unreserved.hasMatch(c) ||
+          (allowReserved && UrlTemplateParser._reserved.hasMatch(c))) {
         result += c;
       } else {
-        result += IRLParser.percentEncode(c);
+        result += IrlParser.percentEncode(c);
       }
     }
     return result;
@@ -255,10 +255,10 @@ class _URLTemplateVariable {
   }
 }
 
-abstract class _URLTemplatePart {
-  List<_URLTemplateVariable> _variables;
+abstract class _UrlTemplatePart {
+  List<_UrlTemplateVariable> _variables;
 
-  _URLTemplatePart([this._variables = const []]);
+  _UrlTemplatePart([this._variables = const []]);
 
   _expandVariables(Map<String, dynamic> values) {
     var list = [];
@@ -278,7 +278,7 @@ abstract class _URLTemplatePart {
   String _expand(values);
 }
 
-class _StringLiteral extends _URLTemplatePart {
+class _StringLiteral extends _UrlTemplatePart {
   String value;
 
   _StringLiteral(this.value) : super([]);
@@ -290,7 +290,7 @@ class _StringLiteral extends _URLTemplatePart {
   String toString() => value;
 }
 
-class _StringExpansion extends _URLTemplatePart {
+class _StringExpansion extends _UrlTemplatePart {
   @override
   _expand(values) {
     var expanded = _expandVariables(values);
