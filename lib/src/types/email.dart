@@ -187,8 +187,9 @@ class _EmailTokenizer {
     var context = _EmailTokenizerContext.start;
     var buffer = '';
     while (true) {
-      if (_index >= _length(_string))
+      if (_index >= _length(_string)) {
         return _EmailToken(_EmailTokenType.end, '');
+      }
       var c = _charAt(_index);
 
       switch (context) {

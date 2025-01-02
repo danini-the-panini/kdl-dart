@@ -1,22 +1,7 @@
 import 'package:test/test.dart';
 
 import 'package:kdl/kdl.dart';
-import 'package:kdl/src/document.dart';
 import 'package:kdl/src/parser.dart';
-import 'package:kdl/src/types/date_time.dart';
-import 'package:kdl/src/types/duration.dart';
-import 'package:kdl/src/types/decimal.dart';
-import 'package:kdl/src/types/currency.dart';
-import 'package:kdl/src/types/country.dart';
-import 'package:kdl/src/types/email.dart';
-import 'package:kdl/src/types/hostname.dart';
-import 'package:kdl/src/types/ip.dart';
-import 'package:kdl/src/types/url.dart';
-import 'package:kdl/src/types/irl.dart';
-import 'package:kdl/src/types/url_template.dart';
-import 'package:kdl/src/types/uuid.dart';
-import 'package:kdl/src/types/regex.dart';
-import 'package:kdl/src/types/base64.dart';
 
 class Foo extends KdlValue<String> {
   Foo(super.value, [super.type]);
