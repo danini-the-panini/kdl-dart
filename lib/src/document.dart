@@ -488,11 +488,11 @@ class _StringDumper {
   String dump() {
     if (_isBareIdentifier()) return _string;
 
-    return "\"${_string.runes.map(_escape).join('')}\"";
+    return "\"${_string.codeUnits.map(_escape).join('')}\"";
   }
 
-  String _escape(int rune) {
-    switch (rune) {
+  String _escape(int code) {
+    switch (code) {
       case 10:
         return "\\n";
       case 13:
@@ -508,15 +508,15 @@ class _StringDumper {
       case 12:
         return "\\f";
       default:
-        return String.fromCharCode(rune);
+        return String.fromCharCode(code);
     }
   }
 
   static final forbidden = [
-    ...KdlTokenizer.symbols.keys.map((e) => e.runes.single),
-    ...KdlTokenizer.whitespace.map((e) => e.runes.single),
-    ...KdlTokenizer.newlines.map((e) => e.runes.single),
-    ..."()[]/\\\"#".runes,
+    ...KdlTokenizer.symbols.keys.map((e) => e.codeUnits.single),
+    ...KdlTokenizer.whitespace.map((e) => e.codeUnits.single),
+    ...KdlTokenizer.newlines.map((e) => e.codeUnits.single),
+    ..."()[]/\\\"#".codeUnits,
     ...List.generate(0x20, (e) => e),
   ];
 
@@ -540,6 +540,6 @@ class _StringDumper {
       return false;
     }
 
-    return !_string.runes.any((c) => forbidden.contains(c));
+    return !_string.codeUnits.any((c) => forbidden.contains(c));
   }
 }

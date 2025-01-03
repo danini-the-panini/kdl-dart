@@ -302,7 +302,7 @@ class KdlTokenizer {
             String nl = _expectNewline(_index + 3);
             _context = _KdlTokenizerContext.multiLineString;
             _buffer = '';
-            _traverse(3 + nl.runes.length);
+            _traverse(3 + nl.length);
           } else {
             _context = _KdlTokenizerContext.string;
             _buffer = '';
@@ -315,7 +315,7 @@ class KdlTokenizer {
               _context = _KdlTokenizerContext.multiLineRawstring;
               _rawstringHashes = 1;
               _buffer = '';
-              _traverse(4 + nl.runes.length);
+              _traverse(4 + nl.length);
               continue;
             } else {
               _context = _KdlTokenizerContext.rawstring;
@@ -336,7 +336,7 @@ class KdlTokenizer {
                 String nl = _expectNewline(i + 3);
                 _context = _KdlTokenizerContext.multiLineRawstring;
                 _buffer = '';
-                _traverse(_rawstringHashes + 3 + nl.runes.length);
+                _traverse(_rawstringHashes + 3 + nl.length);
                 continue;
               } else {
                 _context = _KdlTokenizerContext.rawstring;
@@ -408,7 +408,7 @@ class KdlTokenizer {
           return KdlToken(symbols[c]!, c);
         } else if (c == "\r" || newlines.contains(c)) {
           String nl = _expectNewline(_index);
-          _traverse(nl.runes.length);
+          _traverse(nl.length);
           return _token(KdlTerm.newline, nl);
         } else if (c == "/") {
           var n = _char(_index + 1);
@@ -710,10 +710,10 @@ class KdlTokenizer {
   }
 
   _char(int i) {
-    if (i < 0 || i >= _str.runes.length) {
+    if (i < 0 || i >= _str.length) {
       return null;
     }
-    var char = String.fromCharCode(_str.runes.elementAt(i));
+    var char = _str.substring(i, i+1);
     if (_forbidden.contains(char)) {
       _fail("Forbidden character: $char");
     }
@@ -787,8 +787,8 @@ class KdlTokenizer {
       return _token(KdlTerm.integer, _parseInteger(_munchUnderscores(s), 10));
     } catch (e) {
       if (_nonInitialIdentifierChars
-              .contains(String.fromCharCode(s.runes.first)) ||
-          s.runes.skip(1).any(
+              .contains(String.fromCharCode(s.codeUnitAt(0))) ||
+          s.codeUnits.skip(1).any(
               (c) => _nonIdentifierChars.contains(String.fromCharCode(c)))) {
         rethrow;
       }
@@ -1081,7 +1081,7 @@ class KdlV1Tokenizer extends KdlTokenizer {
           return _token(_symbols[c]!, c);
         } else if (c == "\r" || _newlines.contains(c)) {
           String nl = _expectNewline(_index);
-          _traverse(nl.runes.length);
+          _traverse(nl.length);
           return _token(KdlTerm.newline, nl);
         } else if (c == "/") {
           var n = _char(_index + 1);

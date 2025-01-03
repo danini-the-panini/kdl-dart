@@ -167,11 +167,11 @@ class _EmailTokenizer {
 
   String _substring(int start, [int? end]) {
     return String.fromCharCodes(
-        _string.runes.toList().sublist(start, end ?? _length(_string)));
+        _string.codeUnits.sublist(start, end ?? _length(_string)));
   }
 
   int _length(String str) {
-    return str.runes.length;
+    return str.length;
   }
 
   _EmailToken nextToken() {
@@ -246,5 +246,5 @@ class _EmailTokenizer {
 
   RegExp _localPartChars() => _idn ? _localPartIdn : _localPartAscii;
 
-  String _charAt(int i) => String.fromCharCode(_string.runes.elementAt(i));
+  String _charAt(int i) => String.fromCharCode(_string.codeUnitAt(i));
 }
