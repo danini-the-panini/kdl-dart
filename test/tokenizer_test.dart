@@ -241,7 +241,7 @@ smile "😁"
         tokenizer.nextToken(), equals(KdlToken(KdlTerm.whitespace, ' ', 1, 6)));
     expect(tokenizer.nextToken(), equals(KdlToken(KdlTerm.string, '😁', 1, 7)));
     expect(
-        tokenizer.nextToken(), equals(KdlToken(KdlTerm.newline, "\n", 1, 10)));
+        tokenizer.nextToken(), equals(KdlToken(KdlTerm.newline, "\n", 1, 11)));
     expect(tokenizer.nextToken(), equals(KdlToken(KdlTerm.ident, 'ノード', 2, 1)));
     expect(
         tokenizer.nextToken(), equals(KdlToken(KdlTerm.whitespace, ' ', 2, 4)));

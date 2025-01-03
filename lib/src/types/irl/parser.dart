@@ -36,95 +36,10 @@ class IrlParser {
       r"^(?:(?:([a-z][a-z0-9+.\-]+)):\/\/([^@]+@)?([^\/?#]+)?)?(\/?[^?#]*)?(?:\?([^#]*))?(?:#(.*))?$",
       caseSensitive: false);
 
-  static const _reservedUrlChars = [
-    '!',
-    '#',
-    '&',
-    "'",
-    '(',
-    ')',
-    '*',
-    '+',
-    ',',
-    '/',
-    ':',
-    ';',
-    '=',
-    '?',
-    '@',
-    '[',
-    ']',
-    '%'
-  ];
-  static const _unreservedUrlChars = [
-    'A',
-    'B',
-    'C',
-    'D',
-    'E',
-    'F',
-    'G',
-    'H',
-    'I',
-    'J',
-    'K',
-    'L',
-    'M',
-    'N',
-    'O',
-    'P',
-    'Q',
-    'R',
-    'S',
-    'T',
-    'U',
-    'V',
-    'W',
-    'X',
-    'Y',
-    'Z',
-    'a',
-    'b',
-    'c',
-    'd',
-    'e',
-    'f',
-    'g',
-    'h',
-    'i',
-    'j',
-    'k',
-    'l',
-    'm',
-    'n',
-    'o',
-    'p',
-    'q',
-    'r',
-    's',
-    't',
-    'u',
-    'v',
-    'w',
-    'x',
-    'y',
-    'z',
-    '0',
-    '1',
-    '2',
-    '3',
-    '4',
-    '5',
-    '6',
-    '7',
-    '8',
-    '9',
-    '-',
-    '_',
-    '.',
-    '~'
-  ];
-  static final _urlChars = _reservedUrlChars + _unreservedUrlChars;
+  static const _reservedUrlChars = "!#&'()*+,/:;=?@[]%";
+  static const _unreservedUrlChars =
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~';
+  static final _urlChars = (_reservedUrlChars + _unreservedUrlChars).codeUnits;
 
   final String _string;
   final bool _isReference;
@@ -199,8 +114,8 @@ class IrlParser {
   static bool _isValidUrlPart(String? string) {
     if (string == null) return true;
 
-    return !string.runes.any((rune) =>
-        rune <= 127 && !_urlChars.contains(String.fromCharCode(rune)));
+    return !string.codeUnits
+        .any((code) => code <= 127 && !_urlChars.contains(code));
   }
 
   static String? _encode(String? string) {
