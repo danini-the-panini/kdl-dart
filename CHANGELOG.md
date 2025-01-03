@@ -1,3 +1,7 @@
+## v2.0.1 (2025-01-03)
+
+- Performance improvements
+
 ## v2.0.0 (2025-01-02)
 
 - KDL 2.0.0 spec compliant
