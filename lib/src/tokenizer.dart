@@ -713,7 +713,7 @@ class KdlTokenizer {
     if (i < 0 || i >= _str.length) {
       return null;
     }
-    var char = _str.substring(i, i+1);
+    var char = _str.substring(i, i + 1);
     if (_forbidden.contains(char)) {
       _fail("Forbidden character: $char");
     }
