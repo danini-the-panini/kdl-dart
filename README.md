@@ -11,14 +11,14 @@ This is a Dart implementation of the [KDL Document Language](https://kdl.dev)
 import 'package:kdl/kdl.dart';
 
 main() {
-  var document = Kdl.parseDocument(someString);
+  var document = KdlDocument.parse(someString);
 }
 ```
 
 You can optionally provide your own type annotation handlers:
 
 ```dart
-KDL.parseDocument(someString, typeParsers: {
+KdlDocument.parse(someString, typeParsers: {
   'foo': (value, type) {
     return Foo(value.value, type: type)
   },
