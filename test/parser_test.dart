@@ -97,6 +97,12 @@ void main() {
         ])));
     expect(parser.parse('node /--1'), equals(KdlDocument([KdlNode('node')])));
     expect(parser.parse('node /- -1'), equals(KdlDocument([KdlNode('node')])));
+    expect(parser.parse('node/-1'), equals(KdlDocument([KdlNode('node')])));
+    expect(
+        parser.parse('node "string"/-1'),
+        equals(KdlDocument([
+          KdlNode('node', arguments: [KdlString("string")])
+        ])));
     expect(
         parser.parse("node \\\n/- -1"), equals(KdlDocument([KdlNode('node')])));
   });
@@ -110,6 +116,13 @@ void main() {
         parser.parse('node key=1 /-key2=2'),
         equals(KdlDocument([
           KdlNode('node', properties: {'key': KdlInt(1)})
+        ])));
+    expect(
+        parser.parse('node/-foo=bar'), equals(KdlDocument([KdlNode('node')])));
+    expect(
+        parser.parse('node "string"/-foo=bar'),
+        equals(KdlDocument([
+          KdlNode('node', arguments: [KdlString("string")])
         ])));
   });
 
@@ -751,6 +764,22 @@ node2 "\\n\\t\\r\\\\\\"\\f\\b"
       KdlNode('node2', arguments: [KdlString("\n\t\r\\\"\f\b")]),
     ]);
     expect(doc, equals(nodes));
+
+    expect(() {
+      parser.parse('node "\\u"');
+    }, throwsA(isA<KdlParseException>()));
+    expect(() {
+      parser.parse('node "\\u{}"');
+    }, throwsA(isA<KdlParseException>()));
+    expect(() {
+      parser.parse('node "\\u{"');
+    }, throwsA(isA<KdlParseException>()));
+    expect(() {
+      parser.parse('node "\\u}"');
+    }, throwsA(isA<KdlParseException>()));
+    expect(() {
+      parser.parse('node "\\u{0123456}"');
+    }, throwsA(isA<KdlParseException>()));
   });
 
   test('node type', () {

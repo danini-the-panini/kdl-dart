@@ -149,6 +149,7 @@ class KdlParser {
       var peek = _tokenizer.peekToken();
       switch (peek.type) {
         case KdlTerm.whitespace:
+        case KdlTerm.slashdash:
           _wsStar();
           peek = _tokenizer.peekToken();
           if (peek.type == KdlTerm.slashdash) {
