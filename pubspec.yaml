@@ -1,5 +1,5 @@
 name: kdl
-version: 2.0.1
+version: 2.0.2
 description: KDL is a small, pleasant document language with XML-like node semantics that looks like you're invoking a bunch of CLI commands!
 repository: https://github.com/danini-the-panini/kdl-dart
 environment:
