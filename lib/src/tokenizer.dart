@@ -860,7 +860,13 @@ class KdlTokenizer {
   _unescapeRgx(String string, RegExp rgx) {
     return string.replaceAllMapped(rgx, (match) {
       return _replaceEsc(match.group(0));
-    }).replaceAllMapped(RegExp(r"\\u\{[0-9a-fA-F]{1,6}\}"), (match) {
+    }).replaceAllMapped(RegExp(r"\\u(\{?[0-9a-fA-F]*\}?)?"), (match) {
+      if (match[1] == null ||
+          match[1]!.length <= 2 ||
+          match[1]!.length > 8 ||
+          !(match[1]!.startsWith("{") && match[1]!.endsWith("}"))) {
+        _fail("Invalid escape '${match[0]}'");
+      }
       String m = match.group(0) ?? '';
       int i = int.parse(m.substring(3, m.length - 1), radix: 16);
       if (i < 0 || i > 0x10FFFF || (i >= 0xD800 && i <= 0xDFFF)) {

@@ -1,3 +1,7 @@
+## v2.0.2 (2025-05-30)
+
+- Minor spec compliance fixes
+
 ## v2.0.1 (2025-01-03)
 
 - Performance improvements
